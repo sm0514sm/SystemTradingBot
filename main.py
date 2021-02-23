@@ -41,6 +41,12 @@ def auto_order(coin: dict, price: float):
     krw_sold = float(accounts[0].get('balance'))
     # print(sell_result)
 
+    with open("logs/order.log", "a") as f:
+        f.write(
+            f'{get_now_time()} [KRW-{coin.get("name")}] 산 금액: {int(krw_before - krw_bought)}원, 판 금액: {int(krw_sold - krw_bought)}원, '
+            f'손익: {int(krw_sold - krw_before)}원 '
+            f'({int(krw_sold - krw_bought) / int(krw_before - krw_bought) * 100 - 100:.3f}%)'
+        )
     print(
         f'{get_now_time()} [KRW-{coin.get("name")}] 산 금액: {int(krw_before - krw_bought)}원, 판 금액: {int(krw_sold - krw_bought)}원, '
         f'손익: {int(krw_sold - krw_before)}원 '
@@ -63,7 +69,7 @@ if __name__ == '__main__':
     # 코인 모니터링
     while True:
         time.sleep(check_interval)
-        print(f'{get_now_time()} interval')
+        # print(f'{get_now_time()} interval')
         for coin_name in coin_names:
             minute_candles = get_market_minute_candle(market="KRW-" + coin_name, count=check_count)
             if not minute_candles:
@@ -74,6 +80,9 @@ if __name__ == '__main__':
             if (now_time - start_time).total_seconds() < surge_STV_time:
                 if minute_candles[0]['candle_acc_trade_volume'] > max(stv_list):
                     if minute_candles[0]['trade_price'] > minute_candles[0]['opening_price']:
+                        print(f'(now_time - start_time).total_seconds(): {(now_time - start_time).total_seconds()}')
+                        print(f"minute_candles[0]['candle_acc_trade_volume'] > max(stv_list): {minute_candles[0]['candle_acc_trade_volume']} > {max(stv_list)}")
+                        print(f"minute_candles[0]['trade_price'] > minute_candles[0]['opening_price']: {minute_candles[0]['trade_price']} > {minute_candles[0]['opening_price']}")
                         # 코인 주문
                         coin_order = dict()
                         coin_order['name'] = coin_name
