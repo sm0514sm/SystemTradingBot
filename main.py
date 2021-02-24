@@ -40,7 +40,7 @@ def auto_order(coin: dict, price: float):
     accounts = get_account(access_key, secret_key)
     krw_sold = float(accounts[0].get('balance'))
     # print(sell_result)
-
+    os.makedirs('logs', exist_ok=True)
     with open("logs/order.log", "a") as f:
         f.write(
             f'{get_now_time()} [KRW-{coin.get("name")}] 산 금액: {int(krw_before - krw_bought)}원, 판 금액: {int(krw_sold - krw_bought)}원, '
