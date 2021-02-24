@@ -11,6 +11,7 @@ def get_market_minute_candle(market: str, count: int) -> list:
         querystring = {"market": market, "count": count}
 
         response = requests.request("GET", url, params=querystring)
+        # print(response.headers)
         # print(json.dumps(response.json(), indent=2))
         res_list: list = response.json()
         # print(res_list)

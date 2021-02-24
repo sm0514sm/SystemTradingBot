@@ -7,6 +7,7 @@ def get_market_code() -> list:
     """
     querystring = {"isDetails": "false"}
     response = requests.request("GET", "https://api.upbit.com/v1/market/all", params=querystring)
+
     market_codes = []
     for data in response.json():
         if 'KRW-' not in data['market']:
@@ -16,4 +17,7 @@ def get_market_code() -> list:
 
 
 if __name__ == '__main__':
-    print(get_market_code())
+    codes = get_market_code()
+    print(codes)
+    print(len(codes))
+

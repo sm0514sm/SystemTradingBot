@@ -19,4 +19,5 @@ def get_account(access_key: str, secret_key: str) -> list:
     headers = {"Authorization": authorize_token}
 
     res = requests.get('https://api.upbit.com/v1/accounts', headers=headers)
+
     return res.json()

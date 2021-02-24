@@ -16,13 +16,15 @@ from function.get_market_minute_candle import get_market_minute_candle
 
 config = configparser.ConfigParser()
 config.read('config.ini')
+order_config = config['ORDER']
 access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
 secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
-wait_time: float = float(config['ORDER']['WAIT_TIME'])
-check_interval: float = float(config['ORDER']['CHECK_INTERVAL'])
-check_count: int = int(config['ORDER']['CHECK_COUNT'])
-surge_STV_time: float = float(config['ORDER']['SURGE_STV_DETECTION_TIME'])
-percent_of_buying: float = float(config['ORDER']['PERCENTS_OF_BUYING'])
+wait_time: float = order_config.getfloat('WAIT_TIME')
+check_interval: float = order_config.getfloat('CHECK_INTERVAL')
+check_count: int = order_config.getint('CHECK_COUNT')
+surge_STV_time: float = order_config.getfloat('SURGE_STV_DETECTION_TIME')
+percent_of_buying: float = order_config.getfloat('PERCENTS_OF_BUYING')
+percent_of_rising: float = order_config.getfloat('DETERMINE_PERCENTS_OF_RISING')
 
 
 def auto_order(coin: dict, price: float):
@@ -81,14 +83,19 @@ if __name__ == '__main__':
         # print(f'{get_now_time()} interval')
         for coin_name in coin_names:
             minute_candles = get_market_minute_candle(market="KRW-" + coin_name, count=check_count)
+
             if not minute_candles:
                 continue
             stv_list = [minute_candle['candle_acc_trade_volume'] for minute_candle in minute_candles[1:]]
             start_time = datetime.datetime.strptime(minute_candles[0]['candle_date_time_kst'], '%Y-%m-%dT%H:%M:%S')
             now_time = datetime.datetime.fromtimestamp(minute_candles[0]['timestamp'] / 1000)
+            # 판단 1. 거래량 급증 탐지시간이내
             if (now_time - start_time).total_seconds() < surge_STV_time:
+                # 판단 2. 거래량이 이전 분 캔들 조회 리스트 중 가장 큰 값보다 초과
                 if minute_candles[0]['candle_acc_trade_volume'] > max(stv_list):
-                    if minute_candles[0]['trade_price'] > minute_candles[0]['opening_price']:
+                    # 판단 3. 시가 * 상승 판단 비율 보다 현재 가격이 높음
+                    if minute_candles[0]['trade_price'] > minute_candles[0]['opening_price'] * (
+                            100 + percent_of_rising) / 100:
                         print(f'(now_time - start_time).total_seconds(): {(now_time - start_time).total_seconds()}')
                         print(f"minute_candles[0]['candle_acc_trade_volume'] > max(stv_list): "
                               f"{minute_candles[0]['candle_acc_trade_volume']} > {max(stv_list)}")
@@ -104,6 +111,3 @@ if __name__ == '__main__':
                         krw_before = float(coin_accounts[0].get('balance'))
                         price_per_order = max(6000.0, krw_before * percent_of_buying / 100)
                         break
-
-
-
