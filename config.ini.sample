@@ -20,3 +20,6 @@ WAIT_TIME=40.0
 
 # 모니터링할 코인 개수 (너무 많으면 API 할당량 초과)
 NUMBER_OF_COINS_TO_MONITOR=10
+
+# 거래당 매수할 보유krw 비율 (%) default:30
+PERCENTS_OF_BUYING=30

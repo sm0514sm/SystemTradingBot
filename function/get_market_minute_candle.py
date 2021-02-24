@@ -15,8 +15,8 @@ def get_market_minute_candle(market: str, count: int) -> list:
         res_list: list = response.json()
         # print(res_list)
         return res_list
-    except json.decoder.JSONDecodeError:
-        # print(market, count)
+    except (json.decoder.JSONDecodeError, requests.exceptions.ConnectionError) as e:
+        print("[ERROR]", e, market, count)
         pass
     # print(datetime.datetime.fromtimestamp(dict(res_list[0])['timestamp'] / 1000))
     # print(datetime.datetime.fromtimestamp(dict(res_list[1])['timestamp'] / 1000))

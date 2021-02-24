@@ -3,6 +3,7 @@ import json
 import uuid
 import hashlib
 from urllib.parse import urlencode
+import os
 import configparser
 import requests
 import time
@@ -21,13 +22,20 @@ wait_time: float = float(config['ORDER']['WAIT_TIME'])
 check_interval: float = float(config['ORDER']['CHECK_INTERVAL'])
 check_count: int = int(config['ORDER']['CHECK_COUNT'])
 surge_STV_time: float = float(config['ORDER']['SURGE_STV_DETECTION_TIME'])
+percent_of_buying: float = float(config['ORDER']['PERCENTS_OF_BUYING'])
 
 
 def auto_order(coin: dict, price: float):
     print(f'{get_now_time()} [KRW-{coin.get("name")}] {int(price)}원 주문')
     buy_result = buy_stock(access_key, secret_key, market="KRW-" + coin['name'], price=price)
-    accounts = get_account(access_key, secret_key)
+    accounts = []
+    for _ in range(10):
+        time.sleep(1)
+        accounts = get_account(access_key, secret_key)
+        if accounts[0].get('balance'):
+            break
     krw_bought = float(accounts[0].get('balance'))
+
     # print(buy_result)
 
     for coin_kind in accounts:
@@ -55,10 +63,11 @@ def auto_order(coin: dict, price: float):
 
 
 if __name__ == '__main__':
+    print(config.items(section="ORDER"))
+    # 주문 가격 결정
     coin_accounts: list = get_account(access_key, secret_key)
     krw_before = float(coin_accounts[0].get('balance'))
-    # 주문 가격 결정
-    price_per_order = max(6000.0, krw_before / 10)
+    price_per_order = max(6000.0, krw_before * percent_of_buying / 100)
     # 주문할 코인 결정
     coin_names = list()
     for market_name in get_market_code():
@@ -81,18 +90,19 @@ if __name__ == '__main__':
                 if minute_candles[0]['candle_acc_trade_volume'] > max(stv_list):
                     if minute_candles[0]['trade_price'] > minute_candles[0]['opening_price']:
                         print(f'(now_time - start_time).total_seconds(): {(now_time - start_time).total_seconds()}')
-                        print(f"minute_candles[0]['candle_acc_trade_volume'] > max(stv_list): {minute_candles[0]['candle_acc_trade_volume']} > {max(stv_list)}")
-                        print(f"minute_candles[0]['trade_price'] > minute_candles[0]['opening_price']: {minute_candles[0]['trade_price']} > {minute_candles[0]['opening_price']}")
+                        print(f"minute_candles[0]['candle_acc_trade_volume'] > max(stv_list): "
+                              f"{minute_candles[0]['candle_acc_trade_volume']} > {max(stv_list)}")
+                        print(f"minute_candles[0]['trade_price'] > minute_candles[0]['opening_price']: "
+                              f"{minute_candles[0]['trade_price']} > {minute_candles[0]['opening_price']}")
                         # 코인 주문
                         coin_order = dict()
                         coin_order['name'] = coin_name
-                        # print(f'coin 매수 {coin_name}')
                         auto_order(coin=coin_order, price=price_per_order)
 
                         # 주문 가격 결정
                         coin_accounts: list = get_account(access_key, secret_key)
                         krw_before = float(coin_accounts[0].get('balance'))
-                        price_per_order = max(6000.0, krw_before / 10)
+                        price_per_order = max(6000.0, krw_before * percent_of_buying / 100)
                         break
 
 
