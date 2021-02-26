@@ -15,16 +15,16 @@ from function.get_now_time import get_now_time
 from function.get_market_minute_candle import get_market_minute_candle
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('config.ini', encoding='UTF8')
 order_config = config['ORDER']
 access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
 secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
 wait_time: float = order_config.getfloat('WAIT_TIME')
-check_interval: float = order_config.getfloat('CHECK_INTERVAL')
 check_count: int = order_config.getint('CHECK_COUNT')
 surge_STV_time: float = order_config.getfloat('SURGE_STV_DETECTION_TIME')
 percent_of_buying: float = order_config.getfloat('PERCENTS_OF_BUYING')
 percent_of_rising: float = order_config.getfloat('DETERMINE_PERCENTS_OF_RISING')
+coin_list: str = order_config.get('COINS_LIST2')
 
 
 def auto_order(coin: dict, price: float):
@@ -71,17 +71,13 @@ if __name__ == '__main__':
     krw_before = float(coin_accounts[0].get('balance'))
     price_per_order = max(6000.0, krw_before * percent_of_buying / 100)
     # 주문할 코인 결정
-    coin_names = list()
-    for market_name in get_market_code():
-        if len(coin_names) > int(config['ORDER']['NUMBER_OF_COINS_TO_MONITOR']):
-            break
-        coin_names.append(market_name.split('-')[1])
-
+    coin_names = coin_list.split()
+    print(coin_names)
     # 코인 모니터링
     while True:
-        time.sleep(check_interval)
-        # print(f'{get_now_time()} interval')
+        print(f'{get_now_time()} interval')
         for coin_name in coin_names:
+            time.sleep(0.06)
             minute_candles = get_market_minute_candle(market="KRW-" + coin_name, count=check_count)
 
             if not minute_candles:
@@ -96,11 +92,6 @@ if __name__ == '__main__':
                     # 판단 3. 시가 * 상승 판단 비율 보다 현재 가격이 높음
                     if minute_candles[0]['trade_price'] > minute_candles[0]['opening_price'] * (
                             100 + percent_of_rising) / 100:
-                        print(f'(now_time - start_time).total_seconds(): {(now_time - start_time).total_seconds()}')
-                        print(f"minute_candles[0]['candle_acc_trade_volume'] > max(stv_list): "
-                              f"{minute_candles[0]['candle_acc_trade_volume']} > {max(stv_list)}")
-                        print(f"minute_candles[0]['trade_price'] > minute_candles[0]['opening_price']: "
-                              f"{minute_candles[0]['trade_price']} > {minute_candles[0]['opening_price']}")
                         # 코인 주문
                         coin_order = dict()
                         coin_order['name'] = coin_name

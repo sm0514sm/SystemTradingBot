@@ -11,13 +11,13 @@ def get_market_minute_candle(market: str, count: int) -> list:
         querystring = {"market": market, "count": count}
 
         response = requests.request("GET", url, params=querystring)
-        # print(response.headers)
+        # print(response)
         # print(json.dumps(response.json(), indent=2))
         res_list: list = response.json()
         # print(res_list)
         return res_list
     except (json.decoder.JSONDecodeError, requests.exceptions.ConnectionError) as e:
-        print("[ERROR]", e, market, count)
+        print("[ERROR]", e, "Too many requests.", market, count)
         pass
     # print(datetime.datetime.fromtimestamp(dict(res_list[0])['timestamp'] / 1000))
     # print(datetime.datetime.fromtimestamp(dict(res_list[1])['timestamp'] / 1000))
