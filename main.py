@@ -21,10 +21,11 @@ access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
 secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
 wait_time: float = order_config.getfloat('WAIT_TIME')
 check_count: int = order_config.getint('CHECK_COUNT')
+combo_check_count: int = order_config.getint('COMBO_CHECK_COUNT')
 surge_STV_time: float = order_config.getfloat('SURGE_STV_DETECTION_TIME')
 percent_of_buying: float = order_config.getfloat('PERCENTS_OF_BUYING')
 percent_of_rising: float = order_config.getfloat('DETERMINE_PERCENTS_OF_RISING')
-coin_list: str = order_config.get('COINS_LIST2')
+coin_list: str = order_config.get('COINS_LIST')
 
 
 def auto_order(coin: dict, price: float):
@@ -102,3 +103,22 @@ if __name__ == '__main__':
                         krw_before = float(coin_accounts[0].get('balance'))
                         price_per_order = max(6000.0, krw_before * percent_of_buying / 100)
                         break
+            # else:
+            #     # 판단 2. 이전 캔들들이 가격, 거래량 모두 상승세
+            #     is_increse = True
+            #     for i in range(combo_check_count - 1, 0, -1):
+            #         if minute_candles[i]['candle_acc_trade_volume'] >= minute_candles[i - 1]['candle_acc_trade_volume'] \
+            #                 or minute_candles[i]['trade_price'] >= minute_candles[i - 1]['trade_price']:
+            #             is_increse = False
+            #             break
+            #     if is_increse:
+            #         # 코인 주문
+            #         coin_order = dict()
+            #         coin_order['name'] = coin_name
+            #         auto_order(coin=coin_order, price=price_per_order)
+            #
+            #         # 주문 가격 결정
+            #         coin_accounts: list = get_account(access_key, secret_key)
+            #         krw_before = float(coin_accounts[0].get('balance'))
+            #         price_per_order = max(6000.0, krw_before * percent_of_buying / 100)
+            #         break

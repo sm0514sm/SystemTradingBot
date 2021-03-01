@@ -26,12 +26,6 @@ def get_market_minute_candle(market: str, count: int) -> list:
     # print(datetime.datetime.fromtimestamp(dict(res_list[4])['timestamp'] / 1000))
 
 
-# 1. 잔고 확인
-# 2. 이전 5분 동안의 거래량 보다 현재 20초 만에 거래량이 많고, 상승중이면
-# 3. 매수를 한다
-# 4. 매수 기록을 한다
-# 5. 산지 100초 후에 판
-
 if __name__ == "__main__":
     test = get_market_minute_candle("KRW-BTC", 5)
     print(test[0])
