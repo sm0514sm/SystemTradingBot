@@ -1,6 +1,7 @@
 def print_order_config(config) -> None:
-    print(f"*------------ ORDER CONFIG -------------*")
+    print(f"*--------------- # ORDER CONFIG # ----------------*")
     for con in config:
-        print(f"|{con[0]:>20}: {con[1]:>5}            |")
-
-print_order_config([("fewf", "qrrww"), ("123", "435")])
+        if 'coins_list' in con[0]:
+            continue
+        print(f"|{con[0]:>35}: {con[1]:>5}       |")
+    print(f"*-------------------------------------------------*")

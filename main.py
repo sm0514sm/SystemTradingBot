@@ -15,6 +15,7 @@ from function.get_market_code import get_market_code
 from function.get_now_time import get_now_time
 from function.get_market_minute_candle import get_market_minute_candle
 from function.get_now_coin_info import get_now_coin_info
+from function.print_your_config import print_order_config
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='UTF8')
@@ -70,7 +71,7 @@ def auto_order(coin: dict, price: float):
 
 
 if __name__ == '__main__':
-    print(config.items(section="ORDER"))
+    print_order_config(config.items(section="ORDER"))
     # 주문 가격 결정
     coin_accounts: list = get_account(access_key, secret_key)
     krw_before = float(coin_accounts[0].get('balance'))
