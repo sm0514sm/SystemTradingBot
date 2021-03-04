@@ -42,7 +42,7 @@ def auto_order(coin: dict, price: float):
         if accounts[0].get('balance'):
             break
     krw_bought = float(accounts[0].get('balance'))
-    avg_price = float(buy_result.get('avg_price'))
+    avg_price = float(buy_result.get('price'))
     stop_loss_price = avg_price * (100 - percent_of_stop_loss) / 100
     for coin_kind in accounts:
         if coin_kind['currency'] == coin['name']:
