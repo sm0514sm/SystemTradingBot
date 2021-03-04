@@ -7,12 +7,14 @@ import os
 import configparser
 import requests
 import time
+import timeit
 import datetime
 from function.get_account import get_account
 from function.order_stock import buy_stock, sell_stock
 from function.get_market_code import get_market_code
 from function.get_now_time import get_now_time
 from function.get_market_minute_candle import get_market_minute_candle
+from function.get_now_coin_info import get_now_coin_info
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='UTF8')
@@ -25,6 +27,7 @@ combo_check_count: int = order_config.getint('COMBO_CHECK_COUNT')
 surge_STV_time: float = order_config.getfloat('SURGE_STV_DETECTION_TIME')
 percent_of_buying: float = order_config.getfloat('PERCENTS_OF_BUYING')
 percent_of_rising: float = order_config.getfloat('DETERMINE_PERCENTS_OF_RISING')
+percent_of_stop_loss: float = order_config.getfloat('PERCENT_OF_STOP_LOSS')
 coin_list: str = order_config.get('COINS_LIST')
 
 
@@ -38,19 +41,20 @@ def auto_order(coin: dict, price: float):
         if accounts[0].get('balance'):
             break
     krw_bought = float(accounts[0].get('balance'))
-
-    # print(buy_result)
-
+    avg_price = float(buy_result.get('avg_price'))
+    stop_loss_price = avg_price * (100 - percent_of_stop_loss) / 100
     for coin_kind in accounts:
         if coin_kind['currency'] == coin['name']:
             coin['balance'] = coin_kind['balance']
-    # print(coin)
-    time.sleep(wait_time)
+    check_time = timeit.default_timer()
+
+    while timeit.default_timer() - check_time >= wait_time:
+        if stop_loss_price >= get_now_coin_info(f'KRW-{coin.get("name")}', sleep=0.5).get('trade_price'):
+            break
 
     sell_result = sell_stock(access_key, secret_key, market="KRW-" + coin['name'], volume=coin['balance'])
     accounts = get_account(access_key, secret_key)
     krw_sold = float(accounts[0].get('balance'))
-    # print(sell_result)
     os.makedirs('logs', exist_ok=True)
     with open("logs/order.log", "a") as f:
         f.write(
@@ -78,8 +82,7 @@ if __name__ == '__main__':
     while True:
         print(f'{get_now_time()} interval')
         for coin_name in coin_names:
-            time.sleep(0.06)
-            minute_candles = get_market_minute_candle(market="KRW-" + coin_name, count=check_count)
+            minute_candles = get_market_minute_candle(market="KRW-" + coin_name, count=check_count, sleep=0.06)
 
             if not minute_candles:
                 continue
@@ -91,8 +94,8 @@ if __name__ == '__main__':
                 # 판단 2. 거래량이 이전 분 캔들 조회 리스트 중 가장 큰 값보다 초과
                 if minute_candles[0]['candle_acc_trade_volume'] > max(stv_list):
                     # 판단 3. 시가 * 상승 판단 비율 보다 현재 가격이 높음
-                    if minute_candles[0]['trade_price'] > minute_candles[0]['opening_price'] * (
-                            100 + percent_of_rising) / 100:
+                    if minute_candles[0]['trade_price'] > \
+                            minute_candles[0]['opening_price'] * (100 + percent_of_rising) / 100:
                         # 코인 주문
                         coin_order = dict()
                         coin_order['name'] = coin_name

@@ -4,8 +4,9 @@ import datetime
 import time
 
 
-def get_market_minute_candle(market: str, count: int) -> list:
+def get_market_minute_candle(market: str, count: int, sleep: float = 0.0) -> list:
     try:
+        time.sleep(sleep)
         url = "https://api.upbit.com/v1/candles/minutes/1"
 
         querystring = {"market": market, "count": count}
@@ -17,7 +18,6 @@ def get_market_minute_candle(market: str, count: int) -> list:
         # print(res_list)
         return res_list
     except (json.decoder.JSONDecodeError, requests.exceptions.ConnectionError) as e:
-        print("[ERROR]", e, "Too many requests.", market, count)
         pass
     # print(datetime.datetime.fromtimestamp(dict(res_list[0])['timestamp'] / 1000))
     # print(datetime.datetime.fromtimestamp(dict(res_list[1])['timestamp'] / 1000))
