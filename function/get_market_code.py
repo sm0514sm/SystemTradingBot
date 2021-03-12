@@ -1,11 +1,12 @@
 import requests
 
 
-def get_market_code(div_cnt=1, maximum=0) -> list:
+def get_market_code(div_cnt=1, maximum=0, except_krw=True) -> list:
     """KRW 코인 마켓 리스트를 출력함
     Args:
         div_cnt (int): 나눌 개수
         maximum (int): 최대 제한 (0 무제한)
+        except_krw (bool): "KRW-" 제거 여부
     Returns:
         list:
     """
@@ -19,7 +20,7 @@ def get_market_code(div_cnt=1, maximum=0) -> list:
     for data in response.json():
         if 'KRW-' not in data['market']:
             continue
-        KRW_markets.append(data['market'])
+        KRW_markets.append(data['market'][4:])
 
     len_codes = maximum if maximum != 0 else len(KRW_markets) // div_cnt
     for market in KRW_markets:
