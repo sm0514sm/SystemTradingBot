@@ -27,8 +27,9 @@ def get_market_minute_candle(market: str, count: int) -> list:
 
 
 if __name__ == "__main__":
-    test = get_market_minute_candle("KRW-BTC", 5)
+    test = get_market_minute_candle("KRW-META", 5)
     print(test[0])
+    print(test[1])
     a = datetime.datetime.strptime(test[0]['candle_date_time_kst'], '%Y-%m-%dT%H:%M:%S')
     print(a)
     b = datetime.datetime.fromtimestamp(test[0]['timestamp'] / 1000)

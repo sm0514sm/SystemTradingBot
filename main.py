@@ -86,39 +86,22 @@ if __name__ == '__main__':
             stv_list = [minute_candle['candle_acc_trade_volume'] for minute_candle in minute_candles[1:]]
             start_time = datetime.datetime.strptime(minute_candles[0]['candle_date_time_kst'], '%Y-%m-%dT%H:%M:%S')
             now_time = datetime.datetime.fromtimestamp(minute_candles[0]['timestamp'] / 1000)
-            # 판단 1. 거래량 급증 탐지시간이내
-            if (now_time - start_time).total_seconds() < surge_STV_time:
-                # 판단 2. 거래량이 이전 분 캔들 조회 리스트 중 가장 큰 값보다 초과
-                if minute_candles[0]['candle_acc_trade_volume'] > max(stv_list):
-                    # 판단 3. 시가 * 상승 판단 비율 보다 현재 가격이 높음
-                    if minute_candles[0]['trade_price'] > minute_candles[0]['opening_price'] * (
-                            100 + percent_of_rising) / 100:
-                        # 코인 주문
-                        coin_order = dict()
-                        coin_order['name'] = coin_name
-                        auto_order(coin=coin_order, price=price_per_order)
 
-                        # 주문 가격 결정
-                        coin_accounts: list = get_account(access_key, secret_key)
-                        krw_before = float(coin_accounts[0].get('balance'))
-                        price_per_order = max(6000.0, krw_before * percent_of_buying / 100)
-                        break
-            # else:
-            #     # 판단 2. 이전 캔들들이 가격, 거래량 모두 상승세
-            #     is_increse = True
-            #     for i in range(combo_check_count - 1, 0, -1):
-            #         if minute_candles[i]['candle_acc_trade_volume'] >= minute_candles[i - 1]['candle_acc_trade_volume'] \
-            #                 or minute_candles[i]['trade_price'] >= minute_candles[i - 1]['trade_price']:
-            #             is_increse = False
-            #             break
-            #     if is_increse:
-            #         # 코인 주문
-            #         coin_order = dict()
-            #         coin_order['name'] = coin_name
-            #         auto_order(coin=coin_order, price=price_per_order)
-            #
-            #         # 주문 가격 결정
-            #         coin_accounts: list = get_account(access_key, secret_key)
-            #         krw_before = float(coin_accounts[0].get('balance'))
-            #         price_per_order = max(6000.0, krw_before * percent_of_buying / 100)
-            #         break
+            # 판단 1. 거래량 급증 탐지시간이내
+            if (now_time - start_time).total_seconds() >= surge_STV_time:
+                continue
+            # 판단 2. 거래량이 이전 분 캔들 조회 리스트 중 가장 큰 값보다 초과
+            if minute_candles[0]['candle_acc_trade_volume'] <= max(stv_list):
+                continue
+            # 판단 3. 이전 본붕 종가 * 상승 판단 비율 보다 현재 가격이 높음
+            if minute_candles[0]['trade_price'] > minute_candles[1]['trade_price'] * (100 + percent_of_rising) / 100:
+                # 코인 주문
+                coin_order = dict()
+                coin_order['name'] = coin_name
+                auto_order(coin=coin_order, price=price_per_order)
+
+                # 주문 가격 결정
+                coin_accounts: list = get_account(access_key, secret_key)
+                krw_before = float(coin_accounts[0].get('balance'))
+                price_per_order = max(6000.0, krw_before * percent_of_buying / 100)
+                break
