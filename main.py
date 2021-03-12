@@ -19,19 +19,18 @@ from function.print_your_config import print_order_config
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='UTF8')
-order_config = config['ORDER']
+SM_order_config = config['SM_ORDER']
 access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
 secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
-coin_div_cnt: int = order_config.getint('COIN_DIV_CNT')
-coin_div_select: int = order_config.getint('COIN_DIV_SELECT')
-coin_maximum: int = order_config.getint('COIN_MAXIMUM')
-wait_time: float = order_config.getfloat('WAIT_TIME')
-check_count: int = order_config.getint('CHECK_COUNT')
-combo_check_count: int = order_config.getint('COMBO_CHECK_COUNT')
-surge_STV_time: float = order_config.getfloat('SURGE_STV_DETECTION_TIME')
-percent_of_buying: float = order_config.getfloat('PERCENTS_OF_BUYING')
-percent_of_rising: float = order_config.getfloat('DETERMINE_PERCENTS_OF_RISING')
-percent_of_stop_loss: float = order_config.getfloat('PERCENT_OF_STOP_LOSS')
+coin_div_cnt: int = SM_order_config.getint('COIN_DIV_CNT')
+coin_div_select: int = SM_order_config.getint('COIN_DIV_SELECT')
+coin_maximum: int = SM_order_config.getint('COIN_MAXIMUM')
+wait_time: float = SM_order_config.getfloat('WAIT_TIME')
+check_count: int = SM_order_config.getint('CHECK_COUNT')
+surge_STV_time: float = SM_order_config.getfloat('SURGE_STV_DETECTION_TIME')
+percent_of_buying: float = SM_order_config.getfloat('PERCENTS_OF_BUYING')
+percent_of_rising: float = SM_order_config.getfloat('DETERMINE_PERCENTS_OF_RISING')
+percent_of_stop_loss: float = SM_order_config.getfloat('PERCENT_OF_STOP_LOSS')
 
 
 def auto_order(coin: dict, price: float):
@@ -74,7 +73,7 @@ def auto_order(coin: dict, price: float):
 
 
 if __name__ == '__main__':
-    print_order_config(config.items(section="ORDER"))
+    print_order_config(config.items(section="SM_ORDER"))
 
     # 주문 가격 결정
     coin_accounts: list = get_account(access_key, secret_key)
