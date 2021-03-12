@@ -22,6 +22,9 @@ config.read('config.ini', encoding='UTF8')
 order_config = config['ORDER']
 access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
 secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
+coin_div_cnt: int = order_config.getint('COIN_DIV_CNT')
+coin_div_select: int = order_config.getint('COIN_DIV_SELECT')
+coin_maximum: int = order_config.getint('COIN_MAXIMUM')
 wait_time: float = order_config.getfloat('WAIT_TIME')
 check_count: int = order_config.getint('CHECK_COUNT')
 combo_check_count: int = order_config.getint('COMBO_CHECK_COUNT')
@@ -29,7 +32,6 @@ surge_STV_time: float = order_config.getfloat('SURGE_STV_DETECTION_TIME')
 percent_of_buying: float = order_config.getfloat('PERCENTS_OF_BUYING')
 percent_of_rising: float = order_config.getfloat('DETERMINE_PERCENTS_OF_RISING')
 percent_of_stop_loss: float = order_config.getfloat('PERCENT_OF_STOP_LOSS')
-coin_list: str = order_config.get('COINS_LIST')
 
 
 def auto_order(coin: dict, price: float):
@@ -56,6 +58,7 @@ def auto_order(coin: dict, price: float):
     sell_result = sell_stock(access_key, secret_key, market="KRW-" + coin['name'], volume=coin['balance'])
     accounts = get_account(access_key, secret_key)
     krw_sold = float(accounts[0].get('balance'))
+
     os.makedirs('logs', exist_ok=True)
     with open("logs/order.log", "a") as f:
         f.write(
@@ -72,13 +75,16 @@ def auto_order(coin: dict, price: float):
 
 if __name__ == '__main__':
     print_order_config(config.items(section="ORDER"))
+
     # 주문 가격 결정
     coin_accounts: list = get_account(access_key, secret_key)
     krw_before = float(coin_accounts[0].get('balance'))
     price_per_order = max(6000.0, krw_before * percent_of_buying / 100)
+
     # 주문할 코인 결정
-    coin_names = coin_list.split()
+    coin_names = get_market_code(div_cnt=coin_div_cnt, maximum=coin_maximum)[coin_div_select]
     print(coin_names)
+
     # 코인 모니터링
     while True:
         print(f'{get_now_time()} interval')
@@ -97,7 +103,7 @@ if __name__ == '__main__':
             # 판단 2. 거래량이 이전 분 캔들 조회 리스트 중 가장 큰 값보다 초과
             if minute_candles[0]['candle_acc_trade_volume'] <= max(stv_list):
                 continue
-            # 판단 3. 이전 본붕 종가 * 상승 판단 비율 보다 현재 가격이 높음
+            # 판단 3. 이전 분 캔들 종가 * 상승 판단 비율 보다 현재 가격이 높음
             if minute_candles[0]['trade_price'] > minute_candles[1]['trade_price'] * (100 + percent_of_rising) / 100:
                 # 코인 주문
                 coin_order = dict()

@@ -15,15 +15,9 @@ def get_market_minute_candle(market: str, count: int, sleep: float = 0.0) -> lis
         # print(response)
         # print(json.dumps(response.json(), indent=2))
         res_list: list = response.json()
-        # print(res_list)
         return res_list
     except (json.decoder.JSONDecodeError, requests.exceptions.ConnectionError) as e:
         pass
-    # print(datetime.datetime.fromtimestamp(dict(res_list[0])['timestamp'] / 1000))
-    # print(datetime.datetime.fromtimestamp(dict(res_list[1])['timestamp'] / 1000))
-    # print(datetime.datetime.fromtimestamp(dict(res_list[2])['timestamp'] / 1000))
-    # print(datetime.datetime.fromtimestamp(dict(res_list[3])['timestamp'] / 1000))
-    # print(datetime.datetime.fromtimestamp(dict(res_list[4])['timestamp'] / 1000))
 
 
 if __name__ == "__main__":

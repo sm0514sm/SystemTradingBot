@@ -4,11 +4,6 @@ import requests
 
 
 def get_account(access_key: str, secret_key: str) -> list:
-    """Returns the list of stocks held.
-    :param access_key:
-    :param secret_key:
-    :return:
-    """
     payload = {
         'access_key': access_key,
         'nonce': str(uuid.uuid4()),
