@@ -4,8 +4,18 @@
 UPBIT_OPEN_API_ACCESS_KEY=
 UPBIT_OPEN_API_SECRET_KEY=
 
-# STV(Stock Trading Volume): 거래량
-[ORDER]
+[STRATEGY]
+SM_TRADING_STRATEGY=true
+
+# TODO 변동성돌파전략
+VOLATILITY_BREAKOUT_STRATEGY=false
+
+# TODO 역추세전략
+NONAME=false
+
+
+# SM(상민) Trading Algorithm ordering config.
+[SM_ORDER]
 # 모니터링할 코인 설정 (get_market_code의 div_cnt, maximum 변수) (0 <= COIN_DIV_SELECT < COIN_DIV_CNT)
 COIN_DIV_CNT=3
 COIN_DIV_SELECT=2
