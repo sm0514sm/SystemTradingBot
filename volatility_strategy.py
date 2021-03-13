@@ -34,7 +34,7 @@ def volatility_strategy(coin_name):
     while True:
         candles = get_candles('KRW-' + coin_name, count=2, minute=unit)
         now = candles[0]['candle_date_time_kst']
-        print(f'{now=}')
+        print(f'{now}')
         # last_range = 전봉 고가 - 전봉 저가
         last_range = candles[1]['high_price'] - candles[1]['low_price']
         if last_range == 0:
@@ -44,12 +44,12 @@ def volatility_strategy(coin_name):
             new_candle = get_candles('KRW-' + coin_name, 1, 0.06, unit)[0]
             if new_candle['candle_date_time_kst'] != now:
                 break
-            print(f'{buy_price:.2f} 이상 < {new_candle["trade_price"]=}')
+            print(f'{buy_price:.2f} 이상 < {new_candle["trade_price"]}')
             if new_candle["trade_price"] < buy_price:
                 continue
             # 매수
             buy_result = buy_stock(access_key, secret_key, market="KRW-" + coin_name, price=10000)
-            print(f'{buy_result=}')
+            print(f'{buy_result}')
             while get_candles('KRW-' + coin_name, 1, 0.06, unit)[0]['candle_date_time_kst'] == now:
                 continue
 
@@ -70,7 +70,7 @@ def volatility_strategy(coin_name):
 
             # 매도
             sell_result = sell_stock(access_key, secret_key, market="KRW-" + coin_name, volume=coin_volume)
-            print(f'{sell_result=}')
+            print(f'{sell_result}')
 
 
 if __name__ == '__main__':
