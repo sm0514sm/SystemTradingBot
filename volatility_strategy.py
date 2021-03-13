@@ -40,7 +40,10 @@ def volatility_strategy(coin_name):
         if last_range == 0:
             continue
         buy_price = candles[0]["opening_price"] + last_range * (percent_buy_range / 100)
-        while (new_candle := get_candles('KRW-' + coin_name, 1, 0.06, unit)[0])['candle_date_time_kst'] == now:
+        while True:
+            new_candle = get_candles('KRW-' + coin_name, 1, 0.06, unit)[0]
+            if new_candle['candle_date_time_kst'] != now:
+                break
             print(f'{buy_price:.2f} 이상 < {new_candle["trade_price"]=}')
             if new_candle["trade_price"] < buy_price:
                 continue
