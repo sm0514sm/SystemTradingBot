@@ -4,10 +4,10 @@ import datetime
 import time
 
 
-def get_market_minute_candle(market: str, count: int, sleep: float = 0.0) -> list:
+def get_candles(market: str, count: int, sleep: float = 0.0, minute: int = 1) -> list:
     try:
         time.sleep(sleep)
-        url = "https://api.upbit.com/v1/candles/minutes/1"
+        url = f"https://api.upbit.com/v1/candles/minutes/{minute}"
 
         querystring = {"market": market, "count": count}
 
@@ -21,7 +21,7 @@ def get_market_minute_candle(market: str, count: int, sleep: float = 0.0) -> lis
 
 
 if __name__ == "__main__":
-    test = get_market_minute_candle("KRW-META", 5)
+    test = get_candles("KRW-BTC", 5, minute=5)
     print(test[0])
     print(test[1])
     a = datetime.datetime.strptime(test[0]['candle_date_time_kst'], '%Y-%m-%dT%H:%M:%S')

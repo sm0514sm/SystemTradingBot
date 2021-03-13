@@ -2,3 +2,7 @@
 config.ini
 logs
 function/__pycache__
+venv2/Scripts/__pycache__
+venv2/Lib/site-packages/cffi/__pycache__
+venv2/Lib/site-packages/__pycache__
+__pycache__
