@@ -17,18 +17,20 @@ def get_candles(market: str, count: int, sleep: float = 0.0, minute: int = 1) ->
         res_list: list = response.json()
         return res_list
     except (json.decoder.JSONDecodeError, requests.exceptions.ConnectionError) as e:
-        pass
+        time.sleep(sleep)
+        return get_candles(market, count, sleep, minute)
 
 
 if __name__ == "__main__":
-    test = get_candles("KRW-BTC", 5, minute=5)
-    print(test[0])
-    print(test[1])
-    a = datetime.datetime.strptime(test[0]['candle_date_time_kst'], '%Y-%m-%dT%H:%M:%S')
-    print(a)
-    b = datetime.datetime.fromtimestamp(test[0]['timestamp'] / 1000)
-    print(b)
-    print((b - a).total_seconds())
+    while True:
+        test = get_candles("KRW-BTC", 5, minute=5)
+        print(test[0])
+        print(test[1])
+        a = datetime.datetime.strptime(test[0]['candle_date_time_kst'], '%Y-%m-%dT%H:%M:%S')
+        print(a)
+        b = datetime.datetime.fromtimestamp(test[0]['timestamp'] / 1000)
+        print(b)
+        print((b - a).total_seconds())
 
 '''
   {
