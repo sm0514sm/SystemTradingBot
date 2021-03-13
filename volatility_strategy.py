@@ -28,27 +28,27 @@ VM_order_config = config['VB_ORDER']
 candle_type: str = VM_order_config.get('CANDLE_TYPE')
 unit: int = VM_order_config.getint('MINUTE_CANDLE_UNIT')
 percent_buy_range: int = VM_order_config.getint('PERCENT_OF_BUY_RANGE')
+percent_of_buying: int = VM_order_config.getint('PERCENTS_OF_BUYING')   # 추가
 
 
 def volatility_strategy(coin_name):
     while True:
         candles = get_candles('KRW-' + coin_name, count=2, minute=unit)
         now = candles[0]['candle_date_time_kst']
-        print(f'{now}')
         # last_range = 전봉 고가 - 전봉 저가
         last_range = candles[1]['high_price'] - candles[1]['low_price']
         if last_range == 0:
             continue
         buy_price = candles[0]["opening_price"] + last_range * (percent_buy_range / 100)
+        print(f'{now}, 현재가: {candles[0]["opening_price"]}, 목표가: {buy_price}')
         while True:
             new_candle = get_candles('KRW-' + coin_name, 1, 0.06, unit)[0]
             if new_candle['candle_date_time_kst'] != now:
                 break
-            print(f'{buy_price:.2f} 이상 < {new_candle["trade_price"]}')
             if new_candle["trade_price"] < buy_price:
                 continue
             # 매수
-            buy_result = buy_stock(access_key, secret_key, market="KRW-" + coin_name, price=10000)
+            buy_result = buy_stock(access_key, secret_key, market="KRW-" + coin_name, price=50000)
             print(f'{buy_result}')
             while get_candles('KRW-' + coin_name, 1, 0.06, unit)[0]['candle_date_time_kst'] == now:
                 continue
@@ -74,4 +74,4 @@ def volatility_strategy(coin_name):
 
 
 if __name__ == '__main__':
-    volatility_strategy('MBL')
+    volatility_strategy('BTC')
