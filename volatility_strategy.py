@@ -1,16 +1,11 @@
-import jwt
-import json
-import uuid
-import hashlib
-from urllib.parse import urlencode
 import os
 import configparser
 import requests
 import time
-import timeit
 import datetime
+from Coin import Coin, State
 from function.get_account import get_account
-from function.order_stock import buy_stock, sell_stock
+from function.order_stock import *
 from function.get_market_code import get_market_code
 from function.get_now_time import get_now_time
 from function.get_candles import get_candles
@@ -28,50 +23,69 @@ VM_order_config = config['VB_ORDER']
 candle_type: str = VM_order_config.get('CANDLE_TYPE')
 unit: int = VM_order_config.getint('MINUTE_CANDLE_UNIT')
 percent_buy_range: int = VM_order_config.getint('PERCENT_OF_BUY_RANGE')
-percent_of_buying: int = VM_order_config.getint('PERCENTS_OF_BUYING')   # 추가
+percent_of_buying: int = VM_order_config.getint('PERCENTS_OF_BUYING')  # 추가
 
 
-def volatility_strategy(coin_name):
+def volatility_strategy(coins_name: list):
+    print_order_config(config.items(section="VB_ORDER"))
+    coin_dict = dict()
+    for coin_name in coins_name:
+        coin_dict[coin_name] = Coin(coin_name)
     while True:
-        candles = get_candles('KRW-' + coin_name, count=2, minute=unit)
-        now = candles[0]['candle_date_time_kst']
-        # last_range = 전봉 고가 - 전봉 저가
-        last_range = candles[1]['high_price'] - candles[1]['low_price']
-        if last_range == 0:
-            continue
-        buy_price = candles[0]["opening_price"] + last_range * (percent_buy_range / 100)
-        print(f'{now}, 현재가: {candles[0]["opening_price"]}, 목표가: {buy_price}')
-        while True:
-            new_candle = get_candles('KRW-' + coin_name, 1, 0.06, unit)[0]
-            if new_candle['candle_date_time_kst'] != now:
-                break
-            if new_candle["trade_price"] < buy_price:
-                continue
-            # 매수
-            buy_result = buy_stock(access_key, secret_key, market="KRW-" + coin_name, price=50000)
-            print(f'{buy_result}')
-            while get_candles('KRW-' + coin_name, 1, 0.06, unit)[0]['candle_date_time_kst'] == now:
-                continue
+        for coin in coin_dict.values():
+            candles = get_candles('KRW-' + coin.coin_name, count=2, minute=unit)
+            now = candles[0]['candle_date_time_kst']
+            print(f'{get_now_time()} {coin.coin_name}({set_state_color(coin.state)})| '
+                  f'목표 가: {coin.buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
+                  f' ({set_dif_color(candles[0]["trade_price"], coin.buy_price)})')
 
-            # 매수 개수 확인
-            accounts = []
-            for _ in range(10):
-                time.sleep(1)
-                accounts = get_account(access_key, secret_key)
-                if accounts[0].get('balance'):
-                    break
-            krw_bought = float(accounts[0].get('balance'))
-            avg_price = float(buy_result.get('price'))
-            coin_volume = 0
+            if coin.check_time != now:
+                print(f'{coin.check_time} -> \033[36m{now}\033[0m')
+                if coin.state == State.BOUGHT:
+                    sell_result = coin.sell_coin()
+                    if sell_result == "Not bought":
+                        print(f'\033[100m{get_now_time()} {coin.coin_name}( ERROR)|\033[0m')
+                    else:
+                        print(f'\033[104m{get_now_time()} {coin.coin_name}(  SELL)| '
+                              f'{int(get_total_sell_price(access_key, secret_key, sell_result))}\033[0m')
+                        with open("logs/VB_order.log", "a") as f:
+                            f.write(f'{get_now_time()} {coin.coin_name}(  SELL)| '
+                                    f'{int(get_total_sell_price(access_key, secret_key, sell_result))}원\n')
+                coin.check_time = now
+                coin.variability = candles[1]['high_price'] - candles[1]['low_price']
+                coin.buy_price = candles[0]["opening_price"] + coin.variability * (percent_buy_range / 100)
+            else:  # 시간이 동일하다면
+                if coin.state == State.BOUGHT or coin.variability == 0:
+                    continue
+                if candles[0]['trade_price'] <= coin.buy_price:
+                    continue
 
-            for coin_kind in accounts:
-                if coin_kind['currency'] == coin_name:
-                    coin_volume = coin_kind['balance']
+                # 매수
+                buy_result = coin.buy_coin(price=10000)
+                print(f'\033[101m{get_now_time()} {coin.coin_name}(   BUY)| '
+                      f'{int(get_total_buy_price(access_key, secret_key, coin.coin_name))}원\033[0m')
+                os.makedirs('logs', exist_ok=True)
+                with open("logs/VB_order.log", "a") as f:
+                    f.write(f'{get_now_time()} {coin.coin_name}(   BUY)| '
+                            f'{int(get_total_buy_price(access_key, secret_key, coin.coin_name))}원\n')
 
-            # 매도
-            sell_result = sell_stock(access_key, secret_key, market="KRW-" + coin_name, volume=coin_volume)
-            print(f'{sell_result}')
+
+def set_state_color(state) -> str:
+    if state == State.BOUGHT:
+        return f'\033[91m{state.name:>6}\033[0m'
+    else:
+        return f'{state.name:>6}'
+
+
+def set_dif_color(a, b) -> str:
+    value = (a - b) / a * 100
+    if value < 0:
+        return f'\033[34m{value:>6.2f}%\033[0m'
+    else:
+        return f'\033[31m{value:>6.2f}%\033[0m'
 
 
 if __name__ == '__main__':
-    volatility_strategy('BTC')
+    volatility_strategy(['BTC', 'ETH', 'NEO', 'MTL', 'LTC', 'XRP', 'ETC', 'OMG', 'SNT', 'WAVES', 'XEM', 'QTUM', 'LSK', 'STEEM', 'XLM', 'ARDR', 'KMD', 'ARK', 'STORJ', 'GRS'
+                         , 'REP', 'EMC2', 'ADA', 'SBD', 'POWR', 'BTG', 'ICX', 'EOS', 'TRX', 'SC', 'IGNIS', 'ONT', 'ZIL', 'POLY', 'ZRX', 'SRN', 'LOOM', 'BCH', 'ADX', 'BAT'
+                         , 'IOST', 'DMT', 'RFR', 'CVC', 'IQ', 'IOTA', 'MFT', 'ONG', 'GAS', 'UPP', 'ELF', 'KNC', 'BSV', 'THETA', 'EDR', 'QKC', 'BTT', 'MOC', 'ENJ', 'TFUEL'])

@@ -3,5 +3,5 @@ def print_order_config(config) -> None:
     for con in config:
         if 'coins_list' in con[0]:
             continue
-        print(f"|{con[0]:>35}: {con[1]:>5}       |")
+        print(f"|{con[0]:>35}: {con[1]:>7}     |")
     print(f"*-------------------------------------------------*")
