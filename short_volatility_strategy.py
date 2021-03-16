@@ -23,7 +23,7 @@ percent_buy_range: int = VM_order_config.getint('PERCENT_OF_BUY_RANGE')
 percent_of_buying: int = VM_order_config.getint('PERCENTS_OF_BUYING')  # 추가
 
 
-def volatility_strategy(coins_name: list):
+def short_volatility_strategy(coins_name: list):
     print_order_config(config.items(section="VB_ORDER"))
     coin_dict = dict()
     for coin_name in coins_name:
@@ -32,22 +32,25 @@ def volatility_strategy(coins_name: list):
         for coin in coin_dict.values():
             candles = get_candles('KRW-' + coin.coin_name, count=2, minute=unit)
             now = candles[0]['candle_date_time_kst']
-            print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
+            print(f'{get_now_time()} {coin.coin_name}({set_state_color(coin.state)})| '
                   f'목표 가: {coin.buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
                   f' ({set_dif_color(candles[0]["trade_price"], coin.buy_price)})')
 
             if coin.check_time != now:
                 print(f'{coin.check_time} -> \033[36m{now}\033[0m')
-                if coin.state == State.BOUGHT:
+                if coin.state == State.BOUGHT or coin.state == State.TRYBUY:
                     sell_result = coin.sell_coin()
                     if sell_result == "Not bought":
-                        print(f'\033[100m{get_now_time()} {coin.coin_name:>5}( ERROR)|\033[0m')
+                        print(f'\033[100m{get_now_time()} {coin.coin_name}( ERROR)|\033[0m')
                     else:
-                        print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| '
-                              f'{int(get_total_sell_price(sell_result))}\033[0m')
+                        print(f'\033[104m{get_now_time()} {coin.coin_name}(  SELL)| '
+                              f'{int(get_total_sell_price(access_key))}\033[0m')
                         with open("logs/VB_order.log", "a") as f:
-                            f.write(f'{get_now_time()} {coin.coin_name:>5}(  SELL)| '
-                                    f'{int(get_total_sell_price(sell_result))}원\n')
+                            f.write(f'{get_now_time()} {coin.coin_name}(  SELL)| '
+                                    f'{int(get_total_sell_price(access_key))}원\n')
+                    if coin.state == State.TRYBUY:
+                        coin.cansel_buy()
+                        print(f'\033[104m{get_now_time()} {coin.coin_name}( CANCEL)|\033[0m')
                 coin.check_time = now
                 coin.variability = candles[1]['high_price'] - candles[1]['low_price']
                 coin.buy_price = candles[0]["opening_price"] + coin.variability * (percent_buy_range / 100)
@@ -58,13 +61,21 @@ def volatility_strategy(coins_name: list):
                     continue
 
                 # 매수
-                buy_result = coin.buy_coin(price=10000)
-                print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| '
-                      f'{int(get_total_buy_price(coin.coin_name))}원\033[0m')
+                limit = True
+                buy_result = coin.buy_coin(price=10000, limit=limit)
                 os.makedirs('logs', exist_ok=True)
-                with open("logs/VB_order.log", "a") as f:
-                    f.write(f'{get_now_time()} {coin.coin_name:>5}(   BUY)| '
-                            f'{int(get_total_buy_price(coin.coin_name))}원\n')
+                if limit:
+                    print(f'\033[95m{get_now_time()} {coin.coin_name}(TRYBUY)| '
+                          f'{buy_result.get("locked"):>6}원\033[0m')
+                    with open("logs/VB_order.log", "a") as f:
+                        f.write(f'{get_now_time()} {coin.coin_name}(TRYBUY)| '
+                                f'{buy_result.get("locked"):>6}원\033[0m')
+                else:
+                    print(f'\033[101m{get_now_time()} {coin.coin_name}(   BUY)| '
+                          f'{int(get_total_buy_price(coin.coin_name))}원\033[0m')
+                    with open("logs/VB_order.log", "a") as f:
+                        f.write(f'{get_now_time()} {coin.coin_name}(   BUY)| '
+                                f'{int(get_total_buy_price(coin.coin_name))}원\n')
 
 
 def set_state_color(state) -> str:
@@ -83,6 +94,4 @@ def set_dif_color(a, b) -> str:
 
 
 if __name__ == '__main__':
-    volatility_strategy(['BTC', 'ETH', 'NEO', 'MTL', 'LTC', 'XRP', 'ETC', 'OMG', 'SNT', 'WAVES', 'XEM', 'QTUM', 'LSK', 'STEEM', 'XLM', 'ARDR', 'KMD', 'ARK', 'STORJ', 'GRS'
-                         , 'REP', 'EMC2', 'ADA', 'SBD', 'POWR', 'BTG', 'ICX', 'EOS', 'TRX', 'SC', 'IGNIS', 'ONT', 'ZIL', 'POLY', 'ZRX', 'SRN', 'LOOM', 'BCH', 'ADX', 'BAT'
-                         , 'IOST', 'DMT', 'RFR', 'CVC', 'IQ', 'IOTA', 'MFT', 'ONG', 'GAS', 'UPP', 'ELF', 'KNC', 'BSV', 'THETA', 'EDR', 'QKC', 'BTT', 'MOC', 'ENJ', 'TFUEL'])
+    short_volatility_strategy(['BTC'])

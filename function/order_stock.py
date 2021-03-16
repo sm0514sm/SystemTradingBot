@@ -4,15 +4,38 @@ import hashlib
 import time
 from urllib.parse import urlencode
 import requests
+import configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini', encoding='UTF8')
+try:
+    access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
+    secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
+except KeyError:
+    config.read('../config.ini', encoding='UTF8')
+    access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
+    secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
 
 
-def buy_stock(access_key: str, secret_key: str, market: str, price: float, sleep: float = 3.0) -> dict:
-    query = {
-        'market': market,
-        'side': 'bid',
-        'price': price,
-        'ord_type': 'price',
-    }
+def buy_stock(market: str, price: float, sleep: float = 3.0, volume: float = 0, ord_type: str = "price") -> dict:
+    if (ord_type == "price" and volume != 0) or (ord_type == "limit" and volume == 0):
+        print("뭔가 이상함")
+        return dict()
+    if volume:
+        query = {
+            'market': market,
+            'side': 'bid',
+            'volume': volume,
+            'price': price,
+            'ord_type': ord_type,
+        }
+    else:
+        query = {
+            'market': market,
+            'side': 'bid',
+            'price': price,
+            'ord_type': ord_type,
+        }
     m = hashlib.sha512()
     m.update(urlencode(query).encode())
     query_hash = m.hexdigest()
@@ -33,7 +56,7 @@ def buy_stock(access_key: str, secret_key: str, market: str, price: float, sleep
     return res.json()
 
 
-def sell_stock(access_key: str, secret_key: str, market: str, volume: float, sleep: float = 3.0) -> dict:
+def sell_stock(market: str, volume: float, sleep: float = 3.0) -> dict:
     query = {
         'market': market,
         'side': 'ask',
@@ -60,7 +83,7 @@ def sell_stock(access_key: str, secret_key: str, market: str, volume: float, sle
     return res.json()
 
 
-def get_total_buy_price(access_key: str, secret_key: str, market):
+def get_total_buy_price(market) -> float:
     query = {
         'market': f'KRW-{market}',
     }
@@ -86,9 +109,9 @@ def get_total_buy_price(access_key: str, secret_key: str, market):
     return float(ask_account.get('balance')) * float(ask_account.get('avg_buy_price'))
 
 
-def get_total_sell_price(access_key: str, secret_key: str, uuidd):
+def get_total_sell_price(uuid_value):
     query = {
-        'uuid': uuidd,
+        'uuid': uuid_value,
     }
     query_string = urlencode(query).encode()
 
@@ -113,3 +136,32 @@ def get_total_sell_price(access_key: str, secret_key: str, uuidd):
     for trade in res.get('trades'):
         sell_price += float(trade.get('price')) * float(trade.get('volume'))
     return sell_price
+
+
+def cancel_buy(uuid_value):
+    query = {
+        'uuid': uuid_value,
+    }
+    query_string = urlencode(query).encode()
+
+    m = hashlib.sha512()
+    m.update(query_string)
+    query_hash = m.hexdigest()
+
+    payload = {
+        'access_key': access_key,
+        'nonce': str(uuid.uuid4()),
+        'query_hash': query_hash,
+        'query_hash_alg': 'SHA512',
+    }
+
+    jwt_token = jwt.encode(payload, secret_key).decode('utf-8')
+    authorize_token = 'Bearer {}'.format(jwt_token)
+    headers = {"Authorization": authorize_token}
+
+    res = requests.delete("https://api.upbit.com/v1/order", params=query, headers=headers)
+
+    print(res.json())
+
+
+print(buy_stock("KRW-BTC", 10000, 3, 10, "limit"))

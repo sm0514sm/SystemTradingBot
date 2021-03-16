@@ -1,9 +1,20 @@
 import uuid
 import jwt
 import requests
+import configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini', encoding='UTF8')
+try:
+    access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
+    secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
+except KeyError:
+    config.read('../config.ini', encoding='UTF8')
+    access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
+    secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
 
 
-def get_account(access_key: str, secret_key: str) -> list:
+def get_account() -> list:
     payload = {
         'access_key': access_key,
         'nonce': str(uuid.uuid4()),
@@ -16,5 +27,3 @@ def get_account(access_key: str, secret_key: str) -> list:
     res = requests.get('https://api.upbit.com/v1/accounts', headers=headers)
 
     return res.json()
-
-
