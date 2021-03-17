@@ -42,12 +42,12 @@ class Coin:
     def buy_coin(self, price, limit=False):
         if limit:
             buy_result = buy_stock(f'KRW-{self.coin_name}',
-                                   price=self.buy_price, volume=price / self.buy_price, ord_type="limit", sleep=3)
+                                   price=self.buy_price, volume=price / self.buy_price, ord_type="limit")
             self.state = State.TRYBUY
         else:
-            buy_result = buy_stock(f'KRW-{self.coin_name}', price=price, sleep=3)
+            buy_result = buy_stock(f'KRW-{self.coin_name}', price=price)
             self.state = State.BOUGHT
-        print(buy_result)
+        print("buy_coin", buy_result)
         self.uuid = buy_result.get('uuid')
         return buy_result
 
@@ -55,10 +55,16 @@ class Coin:
         if self.state != State.BOUGHT:
             return "Not bought"
         self.update_balance()
-        sell_result = sell_stock(f'KRW-{self.coin_name}', self.balance, sleep=3)
-        print(sell_result)
+        sell_result = sell_stock(f'KRW-{self.coin_name}', self.balance)
+        print("sell_coin", sell_result)
         self.state = State.WAIT
         return sell_result.get('uuid')
 
     def cansel_buy(self):
         pass
+
+
+if __name__ == "__main__":
+    coin = Coin("ETH")
+    coin.buy_coin(10000)
+    # print(buy_stock(f'KRW-ETH', price=10000, sleep=3))

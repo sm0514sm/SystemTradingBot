@@ -3,6 +3,7 @@ import configparser
 import requests
 import time
 import datetime
+import math
 from Coin import Coin, State
 from function.get_account import get_account
 from function.order_stock import *
@@ -44,10 +45,10 @@ def volatility_strategy(coins_name: list):
                         print(f'\033[100m{get_now_time()} {coin.coin_name:>5}( ERROR)|\033[0m')
                     else:
                         print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| '
-                              f'{int(get_total_sell_price(sell_result))}\033[0m')
+                              f'{round(get_total_sell_price(sell_result))}\033[0m')
                         with open("logs/VB_order.log", "a") as f:
                             f.write(f'{get_now_time()} {coin.coin_name:>5}(  SELL)| '
-                                    f'{int(get_total_sell_price(sell_result))}원\n')
+                                    f'{round(get_total_sell_price(sell_result))}원\n')
                 coin.check_time = now
                 coin.variability = candles[1]['high_price'] - candles[1]['low_price']
                 coin.buy_price = candles[0]["opening_price"] + coin.variability * (percent_buy_range / 100)
@@ -60,11 +61,11 @@ def volatility_strategy(coins_name: list):
                 # 매수
                 buy_result = coin.buy_coin(price=10000)
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| '
-                      f'{int(get_total_buy_price(coin.coin_name))}원\033[0m')
+                      f'{round(get_total_buy_price(coin.coin_name))}원\033[0m')
                 os.makedirs('logs', exist_ok=True)
                 with open("logs/VB_order.log", "a") as f:
                     f.write(f'{get_now_time()} {coin.coin_name:>5}(   BUY)| '
-                            f'{int(get_total_buy_price(coin.coin_name))}원\n')
+                            f'{round(get_total_buy_price(coin.coin_name))}원\n')
 
 
 def set_state_color(state) -> str:

@@ -17,7 +17,7 @@ except KeyError:
     secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
 
 
-def buy_stock(market: str, price: float, sleep: float = 3.0, volume: float = 0, ord_type: str = "price") -> dict:
+def buy_stock(market: str, price: float, sleep: float = 2.0, volume: float = 0, ord_type: str = "price") -> dict:
     if (ord_type == "price" and volume != 0) or (ord_type == "limit" and volume == 0):
         print("뭔가 이상함")
         return dict()
@@ -56,7 +56,7 @@ def buy_stock(market: str, price: float, sleep: float = 3.0, volume: float = 0, 
     return res.json()
 
 
-def sell_stock(market: str, volume: float, sleep: float = 3.0) -> dict:
+def sell_stock(market: str, volume: float, sleep: float = 2.0) -> dict:
     query = {
         'market': market,
         'side': 'ask',
@@ -131,7 +131,7 @@ def get_total_sell_price(uuid_value):
     headers = {"Authorization": authorize_token}
 
     res = requests.get("https://api.upbit.com/v1/order", params=query, headers=headers).json()
-
+    print("get_total_sell_price: res", res, res.get('paid_fee'))
     sell_price = -float(res.get('paid_fee'))
     for trade in res.get('trades'):
         sell_price += float(trade.get('price')) * float(trade.get('volume'))
@@ -162,6 +162,3 @@ def cancel_buy(uuid_value):
     res = requests.delete("https://api.upbit.com/v1/order", params=query, headers=headers)
 
     print(res.json())
-
-
-print(buy_stock("KRW-BTC", 10000, 3, 10, "limit"))

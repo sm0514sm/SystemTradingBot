@@ -2,6 +2,7 @@ import uuid
 import jwt
 import requests
 import configparser
+# from order_stock import sell_stock
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='UTF8')
@@ -27,3 +28,13 @@ def get_account() -> list:
     res = requests.get('https://api.upbit.com/v1/accounts', headers=headers)
 
     return res.json()
+
+
+if __name__ == "__main__":
+    # 계정 내 모든 코인 팔기
+    # for account in get_account():
+    #     if account['currency'] == 'KRW':
+    #         continue
+    #     sell_stock("KRW-" + account['currency'], account['balance'], sleep=0)
+    #     print(account)
+    pass
