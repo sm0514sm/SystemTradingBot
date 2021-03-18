@@ -37,11 +37,14 @@ def volatility_strategy(coins_name: list):
                   f'목표 가: {coin.buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
                   f' ({set_dif_color(candles[0]["trade_price"], coin.buy_price)})')
 
+            # 봉이 바뀌는 경우
+            # 산 상태거나, 현재가격이 산가격의 일정 비율보다 낮으면 판매
+            # 매수기준 재정비
             if coin.check_time != now:
                 print(f'{coin.check_time} -> \033[36m{now}\033[0m')
-                if coin.state == State.BOUGHT:
+                if coin.state == State.BOUGHT or candles[0]["trade_price"] < coin.buy_price * 0.97:
                     sell_result = coin.sell_coin()
-                    if sell_result == "Not bought":
+                    if sell_result == "Not bought" or not sell_result:
                         print(f'\033[100m{get_now_time()} {coin.coin_name:>5}( ERROR)|\033[0m')
                     else:
                         print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| '
@@ -53,19 +56,19 @@ def volatility_strategy(coins_name: list):
                 coin.variability = candles[1]['high_price'] - candles[1]['low_price']
                 coin.buy_price = candles[0]["opening_price"] + coin.variability * (percent_buy_range / 100)
             else:  # 시간이 동일하다면
-                if coin.state == State.BOUGHT or coin.variability == 0:
+                if coin.state == State.BOUGHT:
                     continue
-                if candles[0]['trade_price'] <= coin.buy_price:
+                if coin.variability == 0 or candles[0]['trade_price'] <= coin.buy_price:
                     continue
 
                 # 매수
                 buy_result = coin.buy_coin(price=10000)
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| '
-                      f'{round(get_total_buy_price(coin.coin_name))}원\033[0m')
+                      f'{coin.bought_price}원\033[0m')
                 os.makedirs('logs', exist_ok=True)
                 with open("logs/VB_order.log", "a") as f:
                     f.write(f'{get_now_time()} {coin.coin_name:>5}(   BUY)| '
-                            f'{round(get_total_buy_price(coin.coin_name))}원\n')
+                            f'{coin.bought_price}원\n')
 
 
 def set_state_color(state) -> str:

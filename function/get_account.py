@@ -32,9 +32,9 @@ def get_account() -> list:
 
 if __name__ == "__main__":
     # 계정 내 모든 코인 팔기
-    # for account in get_account():
-    #     if account['currency'] == 'KRW':
-    #         continue
-    #     sell_stock("KRW-" + account['currency'], account['balance'], sleep=0)
-    #     print(account)
+    for account in get_account():
+        if account['currency'] == 'KRW':
+            continue
+        # sell_stock("KRW-" + account['currency'], account['balance'], sleep=1)
+        print(account)
     pass

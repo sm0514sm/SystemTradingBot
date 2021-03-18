@@ -27,6 +27,7 @@ class Coin:
         self.variability: float = 0
         self.buy_price: float = 0  # 목표 매수 금액
         self.uuid: str = ""
+        self.bought_price: float = 0  # 구매 가격
 
     # 매수 개수 확인
     def update_balance(self):
@@ -49,6 +50,7 @@ class Coin:
             self.state = State.BOUGHT
         print("buy_coin", buy_result)
         self.uuid = buy_result.get('uuid')
+        self.bought_price = buy_result.get('locked')
         return buy_result
 
     def sell_coin(self):
