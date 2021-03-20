@@ -55,7 +55,6 @@ def volatility_strategy(coins_name: list):
                                     f'{round(get_total_sell_price(sell_result))}원\n')
                 coin.check_time = now
                 coin.variability = candles[1]['high_price'] - candles[1]['low_price']
-                print(coin.variability)
                 coin.buy_price = candles[0]["opening_price"] + coin.variability * (percent_buy_range / 100)
             else:  # 시간이 동일하다면
                 if coin.state == State.BOUGHT:
