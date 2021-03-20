@@ -41,7 +41,7 @@ def volatility_strategy(coins_name: list):
             # 산 상태거나, 현재가격이 산가격의 일정 비율보다 낮으면 판매
             # 매수기준 재정비
             if coin.check_time != now or \
-                    (coin.state == State.BOUGHT and candles[0]["trade_price"] < coin.bought_price * 0.97):
+                    (coin.state == State.BOUGHT and candles[0]["trade_price"] < float(coin.bought_price) * 0.97):
                 print(f'{coin.check_time} -> \033[36m{now}\033[0m')
                 if coin.state == State.BOUGHT:
                     sell_result = coin.sell_coin()
