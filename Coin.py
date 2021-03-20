@@ -41,13 +41,16 @@ class Coin:
                 break
 
     def buy_coin(self, price, limit=False):
-        if limit:
-            buy_result = buy_stock(f'KRW-{self.coin_name}',
-                                   price=self.buy_price, volume=price / self.buy_price, ord_type="limit")
-            self.state = State.TRYBUY
-        else:
-            buy_result = buy_stock(f'KRW-{self.coin_name}', price=price)
-            self.state = State.BOUGHT
+        try:
+            if limit:
+                buy_result = buy_stock(f'KRW-{self.coin_name}',
+                                       price=self.buy_price, volume=price / self.buy_price, ord_type="limit")
+                self.state = State.TRYBUY
+            else:
+                buy_result = buy_stock(f'KRW-{self.coin_name}', price=price)
+                self.state = State.BOUGHT
+        except ConnectionError:
+            return ""
         print("buy_coin", buy_result)
         self.uuid = buy_result.get('uuid')
         self.bought_price = buy_result.get('locked')

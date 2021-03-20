@@ -31,7 +31,7 @@ def volatility_strategy(coins_name: list):
         coin_dict[coin_name] = Coin(coin_name)
     while True:
         for coin in coin_dict.values():
-            candles = get_candles('KRW-' + coin.coin_name, count=2, minute=unit)
+            candles = get_candles('KRW-' + coin.coin_name, count=2, minute=unit, candle_type=candle_type)
             now = candles[0]['candle_date_time_kst']
             print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
                   f'목표 가: {coin.buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
@@ -40,9 +40,10 @@ def volatility_strategy(coins_name: list):
             # 봉이 바뀌는 경우
             # 산 상태거나, 현재가격이 산가격의 일정 비율보다 낮으면 판매
             # 매수기준 재정비
-            if coin.check_time != now:
+            if coin.check_time != now or \
+                    (coin.state == State.BOUGHT and candles[0]["trade_price"] < coin.bought_price * 0.97):
                 print(f'{coin.check_time} -> \033[36m{now}\033[0m')
-                if coin.state == State.BOUGHT or candles[0]["trade_price"] < coin.buy_price * 0.97:
+                if coin.state == State.BOUGHT:
                     sell_result = coin.sell_coin()
                     if sell_result == "Not bought" or not sell_result:
                         print(f'\033[100m{get_now_time()} {coin.coin_name:>5}( ERROR)|\033[0m')
@@ -54,6 +55,7 @@ def volatility_strategy(coins_name: list):
                                     f'{round(get_total_sell_price(sell_result))}원\n')
                 coin.check_time = now
                 coin.variability = candles[1]['high_price'] - candles[1]['low_price']
+                print(coin.variability)
                 coin.buy_price = candles[0]["opening_price"] + coin.variability * (percent_buy_range / 100)
             else:  # 시간이 동일하다면
                 if coin.state == State.BOUGHT:
@@ -63,6 +65,8 @@ def volatility_strategy(coins_name: list):
 
                 # 매수
                 buy_result = coin.buy_coin(price=10000)
+                if not buy_result:
+                    continue
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| '
                       f'{coin.bought_price}원\033[0m')
                 os.makedirs('logs', exist_ok=True)
@@ -88,7 +92,11 @@ def set_dif_color(a, b) -> str:
 
 if __name__ == '__main__':
     volatility_strategy(
-        ['BTC', 'ETH', 'NEO', 'MTL', 'LTC', 'XRP', 'ETC', 'OMG', 'SNT', 'WAVES', 'XEM', 'QTUM', 'LSK', 'STEEM', 'XLM',
+        ['BTC', 'ETH']
+    )
+
+'''
+['BTC', 'ETH', 'NEO', 'MTL', 'LTC', 'XRP', 'ETC', 'OMG', 'SNT', 'WAVES', 'XEM', 'QTUM', 'LSK', 'STEEM', 'XLM',
          'ARDR', 'KMD', 'ARK', 'STORJ', 'GRS', 'REP', 'EMC2', 'ADA', 'SBD', 'POWR', 'BTG', 'ICX', 'EOS', 'TRX', 'SC',
          'IGNIS', 'ONT', 'ZIL', 'POLY', 'ZRX', 'SRN', 'LOOM', 'BCH', 'ADX', 'BAT', 'IOST', 'DMT', 'RFR', 'CVC', 'IQ',
          'IOTA', 'MFT', 'ONG', 'GAS', 'UPP', 'ELF', 'KNC', 'BSV', 'THETA', 'EDR', 'QKC', 'BTT', 'MOC', 'ENJ', 'TFUEL',
@@ -96,4 +104,5 @@ if __name__ == '__main__':
          'STPT', 'ORBS', 'VET', 'CHZ', 'PXL', 'STMX', 'DKA', 'HIVE', 'KAVA', 'AHT', 'SPND', 'LINK', 'XTZ', 'BORA',
          'JST', 'CRO', 'TON', 'SXP', 'LAMB', 'HUNT', 'MARO', 'PLA', 'DOT', 'SRM', 'MVL', 'PCI', 'STRAX', 'AQT', 'BCHA',
          'GLM', 'QTCON', 'SSX', 'META', 'OBSR', 'FCT2', 'LBC', 'CBK', 'SAND', 'HUM', 'DOGE']
-    )
+
+'''
