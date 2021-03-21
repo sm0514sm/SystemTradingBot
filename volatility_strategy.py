@@ -4,7 +4,6 @@ from function.get_candles import get_candles
 from function.get_now_time import get_now_time
 from function.order_stock import *
 from function.print_your_config import print_order_config
-from function.sm_util import *
 
 
 config = configparser.ConfigParser()
@@ -28,10 +27,15 @@ def volatility_strategy(coins_name: list):
             candles = get_candles('KRW-' + coin.coin_name, count=2, minute=unit, candle_type=candle_type)
             coin.high_price = max(candles[0]["trade_price"], coin.high_price)
             now = candles[0]['candle_date_time_kst']
-            print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
-                  f'목표 가: {coin.buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
-                  f' ({set_dif_color(candles[0]["trade_price"], coin.buy_price)})')
-            percent_dif = (candles[0]["trade_price"] - coin.buy_price) / candles[0]["trade_price"] * 100
+            if coin.state == State.WAIT:
+                print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
+                      f'목표 가: {coin.buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
+                      f' ({set_dif_color(candles[0]["trade_price"], coin.buy_price)})')
+            elif coin.state == State.BOUGHT:
+                print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
+                      f'구매 가: {coin.avg_buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
+                      f' ({set_dif_color(candles[0]["trade_price"], coin.avg_buy_price)})')
+            percent_dif = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
 
             # 매도 조건
             # 1. 시간 캔들이 바뀐 경우
@@ -39,7 +43,7 @@ def volatility_strategy(coins_name: list):
             # 3. TODO 현재 캔들의 고가에서 기준이상 떨어진 경우
             if coin.check_time != now or (coin.state == State.BOUGHT and percent_dif < percent_of_stop_loss):
                 if coin.check_time != now and i == 0:
-                    print(f'---------------------------------- UPDATE --------------------------------------'
+                    print(f'----------------------------------- UPDATE ---------------------------------------'
                           f'\n{coin.check_time} -> \033[36m{now}\033[0m')
                 if coin.state == State.BOUGHT:
                     sell_result = coin.sell_coin()
@@ -51,12 +55,12 @@ def volatility_strategy(coins_name: list):
                         with open("logs/VB_order.log", "a") as f:
                             f.write(f'{get_now_time()} {coin.coin_name:>5}(  SELL)| '
                                     f'{round(get_total_sell_price(sell_result))}원\n')
+                if coin.check_time != now and i == len(coin_dict) - 1:
+                    print(f'---------------------------------------------------------------------------------')
                 coin.check_time = now
                 coin.variability = candles[1]['high_price'] - candles[1]['low_price']
                 coin.buy_price = candles[0]["opening_price"] + coin.variability * (percent_buy_range / 100)
                 coin.high_price = candles[0]["opening_price"]
-                if coin.check_time != now and i == len(coin_dict) - 1:
-                    print(f'-------------------------------------------------------------------------------')
             else:  # 시간이 동일하다면
                 if coin.state == State.BOUGHT:
                     continue
@@ -68,11 +72,11 @@ def volatility_strategy(coins_name: list):
                 if not buy_result:
                     continue
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| '
-                      f'{coin.bought_price}원\033[0m')
+                      f'{coin.bought_amount}원\033[0m')
                 os.makedirs('logs', exist_ok=True)
                 with open("logs/VB_order.log", "a") as f:
                     f.write(f'{get_now_time()} {coin.coin_name:>5}(   BUY)| '
-                            f'{coin.bought_price}원\n')
+                            f'{coin.bought_amount}원\n')
 
 
 def set_state_color(state) -> str:

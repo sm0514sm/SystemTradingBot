@@ -2,7 +2,7 @@ import requests
 import json
 import datetime
 import time
-from sm_util import *
+from function.sm_util import *
 
 
 def get_candles(market: str, count: int, sleep: float = 0.0, minute: int = 1, candle_type: str = "minutes") -> list:

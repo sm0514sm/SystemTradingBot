@@ -5,7 +5,7 @@ import time
 from urllib.parse import urlencode
 import requests
 import configparser
-from sm_util import *
+from function.sm_util import *
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='UTF8')
