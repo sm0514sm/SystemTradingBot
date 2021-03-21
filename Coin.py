@@ -4,6 +4,7 @@ from function.order_stock import buy_stock
 from function.order_stock import sell_stock
 from function.get_account import get_account
 from enum import IntEnum
+from function.sm_util import *
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='UTF8')
@@ -28,11 +29,12 @@ class Coin:
         self.buy_price: float = 0  # 목표 매수 금액
         self.uuid: str = ""
         self.bought_price: float = 0  # 구매 가격
+        self.high_price: float = 0
 
     # 매수 개수 확인
     def update_balance(self):
         for _ in range(10):
-            time.sleep(0.5)
+            time.sleep(0.3)
             for account in get_account():
                 if account.get('currency') == self.coin_name:
                     self.balance = account.get('balance')
@@ -51,7 +53,6 @@ class Coin:
                 self.state = State.BOUGHT
         except ConnectionError:
             return ""
-        print("buy_coin", buy_result)
         self.uuid = buy_result.get('uuid')
         self.bought_price = buy_result.get('locked')
         return buy_result
@@ -61,7 +62,6 @@ class Coin:
             return "Not bought"
         self.update_balance()
         sell_result = sell_stock(f'KRW-{self.coin_name}', self.balance)
-        print("sell_coin", sell_result)
         self.state = State.WAIT
         return sell_result.get('uuid')
 

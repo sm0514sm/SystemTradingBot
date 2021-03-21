@@ -2,6 +2,7 @@ import requests
 import json
 import datetime
 import time
+from sm_util import *
 
 
 def get_candles(market: str, count: int, sleep: float = 0.0, minute: int = 1, candle_type: str = "minutes") -> list:
@@ -14,8 +15,8 @@ def get_candles(market: str, count: int, sleep: float = 0.0, minute: int = 1, ca
         querystring = {"market": market, "count": count}
 
         response = requests.request("GET", url, params=querystring)
-        # print(response)
-        # print(json.dumps(response.json(), indent=2))
+        # print_sm(response)
+        # print_sm(json.dumps(response.json(), indent=2))
         res_list: list = response.json()
         return res_list
     except (json.decoder.JSONDecodeError, requests.exceptions.ConnectionError) as e:

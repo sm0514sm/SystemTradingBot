@@ -5,6 +5,7 @@ import time
 from urllib.parse import urlencode
 import requests
 import configparser
+from sm_util import *
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='UTF8')
@@ -53,6 +54,7 @@ def buy_stock(market: str, price: float, sleep: float = 1.5, volume: float = 0, 
 
     res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers)
     time.sleep(sleep)
+    print_sm(f"buy_stock: {res.json()}")
     return res.json()
 
 
@@ -80,6 +82,7 @@ def sell_stock(market: str, volume: float, sleep: float = 1.5) -> dict:
 
     res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers)
     time.sleep(sleep)
+    print_sm(f"sell_stock: {res.json()}")
     return res.json()
 
 
