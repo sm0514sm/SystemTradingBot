@@ -35,5 +35,5 @@ if __name__ == "__main__":
     for account in get_account():
         if account['currency'] == 'KRW':
             continue
-        sell_stock("KRW-" + account['currency'], account['balance'], sleep=0.3)
+        sell_stock("KRW-" + account['currency'], account['balance'], sleep=0.2)
         print(account)
