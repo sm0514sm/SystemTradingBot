@@ -13,6 +13,9 @@ VOLATILITY_BREAKOUT_STRATEGY=false
 # TODO 역추세전략
 NONAME=false
 
+# 자세한 로그 출력
+PRINT_LOG=on
+
 
 # SM(상민) Trading Algorithm ordering config.
 [SM_ORDER]
@@ -42,10 +45,13 @@ PERCENT_OF_STOP_LOSS=1.0
 
 # VB(VOLATILITY_BREAKOUT) ordering config.
 [VB_ORDER]
-CANDLE_TYPE=minute
-MINUTE_CANDLE_UNIT=60
+# minutes(unit 필수) or days
+CANDLE_TYPE=minutes
+MINUTE_CANDLE_UNIT=30
 # 매수할 Range 비율 (%)
-PERCENT_OF_BUY_RANGE=30
+PERCENT_OF_BUY_RANGE=50
 
 # 거래당 매수할 보유krw 비율 (%) default:30
 PERCENTS_OF_BUYING=50
+
+PERCENT_OF_STOP_LOSS=-1.5

@@ -2,6 +2,7 @@ import uuid
 import jwt
 import requests
 import configparser
+import time
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='UTF8')
@@ -23,9 +24,11 @@ def get_account() -> list:
     jwt_token = jwt.encode(payload, secret_key).decode('utf-8')
     authorize_token = 'Bearer {}'.format(jwt_token)
     headers = {"Authorization": authorize_token}
-
-    res = requests.get('https://api.upbit.com/v1/accounts', headers=headers)
-
+    try:
+        res = requests.get('https://api.upbit.com/v1/accounts', headers=headers)
+    except ConnectionError:
+        time.sleep(0.5)
+        return get_account()
     return res.json()
 
 
