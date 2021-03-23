@@ -34,7 +34,7 @@ def volatility_strategy(coins_name: list):
                 print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
                       f'목표 가: {coin.buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
                       f' ({set_dif_color(candles[0]["trade_price"], coin.buy_price)})')
-            elif coin.state == State.BOUGHT:
+            elif coin.state in [State.BOUGHT, State.ADDBUY]:
                 print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
                       f'구매 가: {coin.avg_buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
                       f' ({set_dif_color(candles[0]["trade_price"], coin.avg_buy_price)})')
@@ -59,9 +59,9 @@ def volatility_strategy(coins_name: list):
                 if coin.check_time != now and i == 0:
                     print(f'----------------------------------- UPDATE ---------------------------------------'
                           f'\n{coin.check_time} -> \033[36m{now}\033[0m')
-                if coin.state == State.BOUGHT:
+                if coin.state in [State.BOUGHT, State.ADDBUY]:
                     sell_result = coin.sell_coin()
-                    print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| {round(get_total_sell_price(sell_result))}\033[0m')
+                    print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| {round(get_total_sell_price(sell_result))}원\033[0m')
                     with open("logs/VB_order.log", "a") as f:
                         f.write(f'{get_now_time()} {coin.coin_name:>5}(  SELL)| {round(get_total_sell_price(sell_result))}원\n')
                 if coin.check_time != now and i == len(coin_dict) - 1:
@@ -71,7 +71,7 @@ def volatility_strategy(coins_name: list):
                 coin.buy_price = candles[0]["opening_price"] + coin.variability * (percent_buy_range / 100)
                 coin.high_price = candles[0]["opening_price"]
             else:  # 시간이 동일하다면
-                if coin.state == State.BOUGHT:
+                if coin.state in [State.BOUGHT, State.ADDBUY]:
                     continue
                 if coin.variability == 0 or candles[0]['trade_price'] < coin.buy_price:
                     continue
