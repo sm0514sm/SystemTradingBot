@@ -4,6 +4,7 @@ from function.get_candles import get_candles
 from function.get_now_time import get_now_time
 from function.order_stock import *
 from function.print_your_config import print_order_config
+from function.get_market_code import get_market_code
 
 
 config = configparser.ConfigParser()
@@ -15,9 +16,11 @@ unit: int = VM_order_config.getint('MINUTE_CANDLE_UNIT')
 percent_buy_range: int = VM_order_config.getint('PERCENT_OF_BUY_RANGE')
 percent_of_buying: int = VM_order_config.getint('PERCENTS_OF_BUYING')  # 추가예
 percent_of_stop_loss: float = VM_order_config.getfloat('PERCENT_OF_STOP_LOSS')
+percent_of_add_buy: float = VM_order_config.getfloat('PERCENT_OF_ADD_BUY')
 
 
 def volatility_strategy(coins_name: list):
+    os.makedirs('logs', exist_ok=True)
     print_order_config(config.items(section="VB_ORDER"))
     coin_dict = dict()
     for coin_name in coins_name:
@@ -37,24 +40,30 @@ def volatility_strategy(coins_name: list):
                       f' ({set_dif_color(candles[0]["trade_price"], coin.avg_buy_price)})')
             percent_dif = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
 
+            # 추가 매수
+            # TODO 추가 매수는 4 or 5분 후에 팔기
+            if coin.state == State.BOUGHT and percent_dif >= percent_of_add_buy:
+                # 매수
+                buy_result = coin.buy_coin(price=290000, addbuy=True)
+                if not buy_result:
+                    continue
+                print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(ADDBUY)| {coin.bought_amount}원\033[0m')
+                with open("logs/VB_order.log", "a") as f:
+                    f.write(f'{get_now_time()} {coin.coin_name:>5}(ADDBUY)| {coin.bought_amount}원\n')
+
             # 매도 조건
             # 1. 시간 캔들이 바뀐 경우
-            # 2. 손실 기준보다 현재가격이 낮은 경우
+            # 2. 구매한 상태이고 손실 기준보다 현재가격이 낮은 경우
             # 3. TODO 현재 캔들의 고가에서 기준이상 떨어진 경우
-            if coin.check_time != now or (coin.state == State.BOUGHT and percent_dif < percent_of_stop_loss):
+            if coin.check_time != now or (coin.state in [State.BOUGHT, State.ADDBUY] and percent_dif < percent_of_stop_loss):
                 if coin.check_time != now and i == 0:
                     print(f'----------------------------------- UPDATE ---------------------------------------'
                           f'\n{coin.check_time} -> \033[36m{now}\033[0m')
                 if coin.state == State.BOUGHT:
                     sell_result = coin.sell_coin()
-                    if sell_result == "Not bought" or not sell_result:
-                        print(f'\033[100m{get_now_time()} {coin.coin_name:>5}( ERROR)|\033[0m')
-                    else:
-                        print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| '
-                              f'{round(get_total_sell_price(sell_result))}\033[0m')
-                        with open("logs/VB_order.log", "a") as f:
-                            f.write(f'{get_now_time()} {coin.coin_name:>5}(  SELL)| '
-                                    f'{round(get_total_sell_price(sell_result))}원\n')
+                    print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| {round(get_total_sell_price(sell_result))}\033[0m')
+                    with open("logs/VB_order.log", "a") as f:
+                        f.write(f'{get_now_time()} {coin.coin_name:>5}(  SELL)| {round(get_total_sell_price(sell_result))}원\n')
                 if coin.check_time != now and i == len(coin_dict) - 1:
                     print(f'---------------------------------------------------------------------------------')
                 coin.check_time = now
@@ -71,12 +80,9 @@ def volatility_strategy(coins_name: list):
                 buy_result = coin.buy_coin(price=10000)
                 if not buy_result:
                     continue
-                print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| '
-                      f'{coin.bought_amount}원\033[0m')
-                os.makedirs('logs', exist_ok=True)
+                print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| {coin.bought_amount}원\033[0m')
                 with open("logs/VB_order.log", "a") as f:
-                    f.write(f'{get_now_time()} {coin.coin_name:>5}(   BUY)| '
-                            f'{coin.bought_amount}원\n')
+                    f.write(f'{get_now_time()} {coin.coin_name:>5}(   BUY)| {coin.bought_amount}원\n')
 
 
 def set_state_color(state) -> str:
@@ -95,16 +101,7 @@ def set_dif_color(a, b) -> str:
 
 
 if __name__ == '__main__':
-    volatility_strategy(
-        ['BTC', 'ETH', 'NEO', 'MTL', 'LTC', 'XRP', 'ETC', 'OMG', 'SNT', 'WAVES', 'XEM', 'QTUM', 'LSK', 'STEEM', 'XLM',
-         'ARDR', 'KMD', 'ARK', 'STORJ', 'GRS', 'REP', 'EMC2', 'ADA', 'SBD', 'POWR', 'BTG', 'ICX', 'EOS', 'TRX', 'SC',
-         'IGNIS', 'ONT', 'ZIL', 'POLY', 'ZRX', 'SRN', 'LOOM', 'BCH', 'ADX', 'BAT', 'IOST', 'DMT', 'RFR', 'CVC', 'IQ',
-         'IOTA', 'MFT', 'ONG', 'GAS', 'UPP', 'ELF', 'KNC', 'BSV', 'THETA', 'EDR', 'QKC', 'BTT', 'MOC', 'ENJ', 'TFUEL',
-         'MANA', 'ANKR', 'NPXS', 'AERGO', 'ATOM', 'TT', 'CRE', 'SOLVE', 'MBL', 'TSHP', 'WAXP', 'HBAR', 'MED', 'MLK',
-         'STPT', 'ORBS', 'VET', 'CHZ', 'PXL', 'STMX', 'DKA', 'HIVE', 'KAVA', 'AHT', 'SPND', 'LINK', 'XTZ', 'BORA',
-         'JST', 'CRO', 'TON', 'SXP', 'LAMB', 'HUNT', 'MARO', 'PLA', 'DOT', 'SRM', 'MVL', 'PCI', 'STRAX', 'AQT', 'BCHA',
-         'GLM', 'QTCON', 'SSX', 'META', 'OBSR', 'FCT2', 'LBC', 'CBK', 'SAND', 'HUM', 'DOGE']
-    )
+    volatility_strategy(get_market_code(div_cnt=1)[0])
 
 '''
 ['BTC', 'ETH', 'NEO', 'MTL', 'LTC', 'XRP', 'ETC', 'OMG', 'SNT', 'WAVES', 'XEM', 'QTUM', 'LSK', 'STEEM', 'XLM',
@@ -115,5 +112,4 @@ if __name__ == '__main__':
          'STPT', 'ORBS', 'VET', 'CHZ', 'PXL', 'STMX', 'DKA', 'HIVE', 'KAVA', 'AHT', 'SPND', 'LINK', 'XTZ', 'BORA',
          'JST', 'CRO', 'TON', 'SXP', 'LAMB', 'HUNT', 'MARO', 'PLA', 'DOT', 'SRM', 'MVL', 'PCI', 'STRAX', 'AQT', 'BCHA',
          'GLM', 'QTCON', 'SSX', 'META', 'OBSR', 'FCT2', 'LBC', 'CBK', 'SAND', 'HUM', 'DOGE']
-
 '''

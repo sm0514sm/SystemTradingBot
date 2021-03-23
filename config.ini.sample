@@ -47,11 +47,15 @@ PERCENT_OF_STOP_LOSS=1.0
 [VB_ORDER]
 # minutes(unit 필수) or days
 CANDLE_TYPE=minutes
-MINUTE_CANDLE_UNIT=30
+MINUTE_CANDLE_UNIT=60
 # 매수할 Range 비율 (%)
 PERCENT_OF_BUY_RANGE=50
 
-# 거래당 매수할 보유krw 비율 (%) default:30
+# 거래당 매수할 보유krw 비율 (%) default: 30
 PERCENTS_OF_BUYING=50
 
-PERCENT_OF_STOP_LOSS=-1.5
+# 손절 수익률 (%) default:-1.5
+PERCENT_OF_STOP_LOSS=-3
+
+# 추가 매수 수익률 (%) default: 3
+PERCENT_OF_ADD_BUY=3

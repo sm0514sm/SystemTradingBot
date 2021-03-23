@@ -17,6 +17,7 @@ class State(IntEnum):
     WAIT = 1
     BOUGHT = 2
     TRYBUY = 3
+    ADDBUY = 4
 
 
 class Coin:
@@ -46,7 +47,7 @@ class Coin:
             if self.balance:
                 break
 
-    def buy_coin(self, price, limit=False):
+    def buy_coin(self, price, limit=False, addbuy=False):
         try:
             if limit:
                 buy_result = buy_stock(f'KRW-{self.coin_name}',
@@ -54,7 +55,7 @@ class Coin:
                 self.state = State.TRYBUY
             else:
                 buy_result = buy_stock(f'KRW-{self.coin_name}', price=price)
-                self.state = State.BOUGHT
+                self.state = State.ADDBUY if addbuy else State.BOUGHT
         except ConnectionError:
             return ""
         self.uuid = buy_result.get('uuid')
@@ -63,8 +64,6 @@ class Coin:
         return buy_result
 
     def sell_coin(self):
-        if self.state != State.BOUGHT:
-            return "Not bought"
         self.update_balance()
         sell_result = sell_stock(f'KRW-{self.coin_name}', self.balance)
         self.state = State.WAIT
