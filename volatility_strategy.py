@@ -59,7 +59,8 @@ def volatility_strategy(coins_name: list):
             # 4. 추가 매수(ADDBUY) 상태 후 3~4분 후에 팔기
             if coin.check_time != now \
                     or (coin.state in [State.BOUGHT, State.ADDBUY] and percent_dif < percent_of_stop_loss)\
-                    or (coin.state == State.ADDBUY and (datetime.now()-coin.buy_time).seconds > 180):
+                    or (coin.state == State.ADDBUY and (datetime.now()-coin.buy_time).seconds > 180)\
+                    or (coin.state == State.ADDBUY and percent_dif >= 2):
                 if coin.check_time != now and i == 0:
                     print(f'----------------------------------- UPDATE ---------------------------------------'
                           f'\n{coin.check_time} -> \033[36m{now}\033[0m')
