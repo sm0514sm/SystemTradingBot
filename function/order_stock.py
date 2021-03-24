@@ -52,7 +52,11 @@ def buy_stock(market: str, price: float, sleep: float = 1.5, volume: float = 0, 
     authorize_token = 'Bearer {}'.format(jwt_token)
     headers = {"Authorization": authorize_token}
 
-    res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers)
+    try:
+        res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers)
+    except ConnectionError:
+        time.sleep(0.5)
+        return buy_stock(market, price, sleep, volume, ord_type)
     time.sleep(sleep)
     print_sm(f"buy_stock: {res.json()}")
     return res.json()
@@ -80,7 +84,11 @@ def sell_stock(market: str, volume: float, sleep: float = 1.5) -> dict:
     authorize_token = 'Bearer {}'.format(jwt_token)
     headers = {"Authorization": authorize_token}
 
-    res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers)
+    try:
+        res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers)
+    except ConnectionError:
+        time.sleep(0.5)
+        return sell_stock(market, volume, sleep)
     time.sleep(sleep)
     print_sm(f"sell_stock: {res.json()}")
     return res.json()
@@ -106,8 +114,11 @@ def get_total_buy_price(market) -> float:
     jwt_token = jwt.encode(payload, secret_key).decode('utf-8')
     authorize_token = 'Bearer {}'.format(jwt_token)
     headers = {"Authorization": authorize_token}
-
-    res = requests.get("https://api.upbit.com/v1/orders/chance", params=query, headers=headers).json()
+    try:
+        res = requests.get("https://api.upbit.com/v1/orders/chance", params=query, headers=headers).json()
+    except ConnectionError:
+        time.sleep(0.5)
+        return get_total_buy_price(market)
     ask_account = res.get('ask_account')
     return float(ask_account.get('balance')) * float(ask_account.get('avg_buy_price'))
 
@@ -133,7 +144,11 @@ def get_total_sell_price(uuid_value):
     authorize_token = 'Bearer {}'.format(jwt_token)
     headers = {"Authorization": authorize_token}
 
-    res = requests.get("https://api.upbit.com/v1/order", params=query, headers=headers).json()
+    try:
+        res = requests.get("https://api.upbit.com/v1/order", params=query, headers=headers).json()
+    except ConnectionError:
+        time.sleep(0.5)
+        return get_total_sell_price(uuid_value)
     print("get_total_sell_price: res", res, res.get('paid_fee'))
     sell_price = -float(res.get('paid_fee'))
     for trade in res.get('trades'):
@@ -162,6 +177,10 @@ def cancel_buy(uuid_value):
     authorize_token = 'Bearer {}'.format(jwt_token)
     headers = {"Authorization": authorize_token}
 
-    res = requests.delete("https://api.upbit.com/v1/order", params=query, headers=headers)
+    try:
+        res = requests.delete("https://api.upbit.com/v1/order", params=query, headers=headers)
+    except ConnectionError:
+        time.sleep(0.5)
+        return cancel_buy(uuid_value)
 
     print(res.json())

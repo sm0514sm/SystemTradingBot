@@ -5,6 +5,7 @@ from function.get_now_time import get_now_time
 from function.order_stock import *
 from function.print_your_config import print_order_config
 from function.get_market_code import get_market_code
+from datetime import datetime
 
 
 config = configparser.ConfigParser()
@@ -21,6 +22,8 @@ percent_of_add_buy: float = VM_order_config.getfloat('PERCENT_OF_ADD_BUY')
 
 def volatility_strategy(coins_name: list):
     os.makedirs('logs', exist_ok=True)
+    log_file = open("logs/VB_order.log", "a")
+
     print_order_config(config.items(section="VB_ORDER"))
     coin_dict = dict()
     for coin_name in coins_name:
@@ -41,29 +44,31 @@ def volatility_strategy(coins_name: list):
             percent_dif = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
 
             # 추가 매수
-            # TODO 추가 매수는 4 or 5분 후에 팔기
             if coin.state == State.BOUGHT and percent_dif >= percent_of_add_buy:
                 # 매수
                 buy_result = coin.buy_coin(price=290000, addbuy=True)
                 if not buy_result:
                     continue
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(ADDBUY)| {coin.bought_amount}원\033[0m')
-                with open("logs/VB_order.log", "a") as f:
-                    f.write(f'{get_now_time()} {coin.coin_name:>5}(ADDBUY)| {coin.bought_amount}원\n')
+                log_file.write(f'{get_now_time()}, {coin.coin_name}, ADDBUY, {coin.bought_amount}\n')
 
             # 매도 조건
             # 1. 시간 캔들이 바뀐 경우
             # 2. 구매한 상태이고 손실 기준보다 현재가격이 낮은 경우
-            # 3. TODO 현재 캔들의 고가에서 기준이상 떨어진 경우
-            if coin.check_time != now or (coin.state in [State.BOUGHT, State.ADDBUY] and percent_dif < percent_of_stop_loss):
+            # 3. TODO 현재 캔들의 고가에서 기준이상 떨어진 경우 (deprecated)
+            # 4. 추가 매수(ADDBUY) 상태 후 3~4분 후에 팔기
+            if coin.check_time != now \
+                    or (coin.state in [State.BOUGHT, State.ADDBUY] and percent_dif < percent_of_stop_loss)\
+                    or (coin.state == State.ADDBUY and (datetime.now()-coin.buy_time).seconds > 180):
                 if coin.check_time != now and i == 0:
                     print(f'----------------------------------- UPDATE ---------------------------------------'
                           f'\n{coin.check_time} -> \033[36m{now}\033[0m')
                 if coin.state in [State.BOUGHT, State.ADDBUY]:
                     sell_result = coin.sell_coin()
-                    print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| {round(get_total_sell_price(sell_result))}원\033[0m')
-                    with open("logs/VB_order.log", "a") as f:
-                        f.write(f'{get_now_time()} {coin.coin_name:>5}(  SELL)| {round(get_total_sell_price(sell_result))}원\n')
+                    print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| {int(round(get_total_sell_price(sell_result)))}원\033[0m')
+                    log_file.write(f'{get_now_time()}, {coin.coin_name}, SELL, {int(round(get_total_sell_price(sell_result)))}\n')
+                if coin.check_time != now:
+                    coin.state = State.WAIT
                 if coin.check_time != now and i == len(coin_dict) - 1:
                     print(f'---------------------------------------------------------------------------------')
                 coin.check_time = now
@@ -71,7 +76,7 @@ def volatility_strategy(coins_name: list):
                 coin.buy_price = candles[0]["opening_price"] + coin.variability * (percent_buy_range / 100)
                 coin.high_price = candles[0]["opening_price"]
             else:  # 시간이 동일하다면
-                if coin.state in [State.BOUGHT, State.ADDBUY]:
+                if coin.state != State.WAIT:
                     continue
                 if coin.variability == 0 or candles[0]['trade_price'] < coin.buy_price:
                     continue
@@ -81,13 +86,14 @@ def volatility_strategy(coins_name: list):
                 if not buy_result:
                     continue
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| {coin.bought_amount}원\033[0m')
-                with open("logs/VB_order.log", "a") as f:
-                    f.write(f'{get_now_time()} {coin.coin_name:>5}(   BUY)| {coin.bought_amount}원\n')
+                log_file.write(f'{get_now_time()}, {coin.coin_name}, BUY, {coin.bought_amount}\n')
 
 
 def set_state_color(state) -> str:
     if state == State.BOUGHT:
         return f'\033[91m{state.name:>6}\033[0m'
+    elif state == State.ADDBUY:
+        return f'\033[96m{state.name:>6}\033[0m'
     else:
         return f'{state.name:>6}'
 

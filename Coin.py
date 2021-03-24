@@ -5,6 +5,7 @@ from function.get_account import get_account
 from function.order_stock import buy_stock
 from function.order_stock import sell_stock
 from function.sm_util import *
+from datetime import datetime
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='UTF8')
@@ -14,6 +15,7 @@ secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
 
 
 class State(IntEnum):
+    PASS = 0    # 한번 매도 했던 코인은 다음번까지 매수하지 않음
     WAIT = 1
     BOUGHT = 2
     TRYBUY = 3
@@ -33,6 +35,7 @@ class Coin:
         self.uuid: str = ""
         self.bought_amount: float = 0  # 구매한 가격
         self.avg_buy_price: float = 0  # 구매한 코인 평균가격
+        self.buy_time: datetime = datetime(2021, 1, 1)  # 구매한 시점
         self.high_price: float = 0
 
     # 매수 개수 확인
@@ -48,16 +51,17 @@ class Coin:
                 break
 
     def buy_coin(self, price, limit=False, addbuy=False):
-        try:
-            if limit:
-                buy_result = buy_stock(f'KRW-{self.coin_name}',
-                                       price=self.buy_price, volume=price / self.buy_price, ord_type="limit")
-                self.state = State.TRYBUY
-            else:
-                buy_result = buy_stock(f'KRW-{self.coin_name}', price=price)
-                self.state = State.ADDBUY if addbuy else State.BOUGHT
-        except ConnectionError:
+        if limit:
+            buy_result = buy_stock(f'KRW-{self.coin_name}',
+                                   price=self.buy_price, volume=price / self.buy_price, ord_type="limit")
+            self.state = State.TRYBUY
+        else:
+            buy_result = buy_stock(f'KRW-{self.coin_name}', price=price)
+            self.state = State.ADDBUY if addbuy else State.BOUGHT
+        if buy_result.get('error'):
+            self.state = State.WAIT
             return ""
+        self.buy_time = datetime.now()
         self.uuid = buy_result.get('uuid')
         self.bought_amount = buy_result.get('locked')
         self.update_balance()
@@ -66,7 +70,7 @@ class Coin:
     def sell_coin(self):
         self.update_balance()
         sell_result = sell_stock(f'KRW-{self.coin_name}', self.balance)
-        self.state = State.WAIT
+        self.state = State.PASS
         return sell_result.get('uuid')
 
     def cansel_buy(self):
