@@ -20,6 +20,10 @@ percent_of_stop_loss: float = VM_order_config.getfloat('PERCENT_OF_STOP_LOSS')
 percent_of_add_buy: float = VM_order_config.getfloat('PERCENT_OF_ADD_BUY')
 sell_add_buy_time: float = VM_order_config.getfloat('SELL_ADD_BUY_TIME')
 
+coin_div_cnt: int = VM_order_config.getint('COIN_DIV_CNT')
+coin_div_select: int = VM_order_config.getint('COIN_DIV_SELECT')
+coin_maximum: int = VM_order_config.getint('COIN_MAXIMUM')
+
 
 def volatility_strategy(coins_name: list):
     os.makedirs('logs', exist_ok=True)
@@ -114,7 +118,7 @@ def set_dif_color(a, b) -> str:
 
 
 if __name__ == '__main__':
-    volatility_strategy(get_market_code(div_cnt=1)[0])
+    volatility_strategy(get_market_code(div_cnt=coin_div_cnt, maximum=coin_maximum)[coin_div_select])
 
 '''
 ['BTC', 'ETH', 'NEO', 'MTL', 'LTC', 'XRP', 'ETC', 'OMG', 'SNT', 'WAVES', 'XEM', 'QTUM', 'LSK', 'STEEM', 'XLM',

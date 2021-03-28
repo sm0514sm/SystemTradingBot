@@ -45,17 +45,22 @@ PERCENT_OF_STOP_LOSS=1.0
 
 # VB(VOLATILITY_BREAKOUT) ordering config.
 [VB_ORDER]
+# 모니터링할 코인 설정 (get_market_code의 div_cnt, maximum 변수) (0 <= COIN_DIV_SELECT < COIN_DIV_CNT)
+COIN_DIV_CNT=2
+COIN_DIV_SELECT=0
+COIN_MAXIMUM=0
+
 # minutes(unit 필수) or days
 CANDLE_TYPE=minutes
-MINUTE_CANDLE_UNIT=60
+MINUTE_CANDLE_UNIT=240
 # 매수할 Range 비율 (%)
-PERCENT_OF_BUY_RANGE=50
+PERCENT_OF_BUY_RANGE=30
 
 # 거래당 매수할 보유krw 비율 (%) default: 30
 PERCENTS_OF_BUYING=50
 
 # 손절 수익률 (%) default:-1.5
-PERCENT_OF_STOP_LOSS=-3
+PERCENT_OF_STOP_LOSS=-2
 
 # 추가 매수 수익률 (%) default: 1
 PERCENT_OF_ADD_BUY=1

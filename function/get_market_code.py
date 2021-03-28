@@ -30,12 +30,15 @@ def get_market_code(div_cnt=1, maximum=0, except_krw=True) -> list:
             codes.clear()
         if len(market_codes) == div_cnt:
             break
+    else:
+        market_codes.append(codes[:])
     return market_codes
 
 
 if __name__ == '__main__':
-    codess = get_market_code(div_cnt=1)
-    print(codess)
+    codess = get_market_code(div_cnt=2)
+    print(codess[0])
+    print(codess[1])
     print(f'list 개수: {len(codess)}\n')
     for i, cod in enumerate(codess):
         print(f'{i}번째({len(cod)}개): {cod}')
