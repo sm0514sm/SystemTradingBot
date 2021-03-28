@@ -57,5 +57,6 @@ PERCENTS_OF_BUYING=50
 # 손절 수익률 (%) default:-1.5
 PERCENT_OF_STOP_LOSS=-3
 
-# 추가 매수 수익률 (%) default: 3
-PERCENT_OF_ADD_BUY=4
+# 추가 매수 수익률 (%) default: 1
+PERCENT_OF_ADD_BUY=1
+SELL_ADD_BUY_TIME=60

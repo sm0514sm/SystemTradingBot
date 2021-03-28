@@ -18,6 +18,7 @@ percent_buy_range: int = VM_order_config.getint('PERCENT_OF_BUY_RANGE')
 percent_of_buying: int = VM_order_config.getint('PERCENTS_OF_BUYING')  # 추가예
 percent_of_stop_loss: float = VM_order_config.getfloat('PERCENT_OF_STOP_LOSS')
 percent_of_add_buy: float = VM_order_config.getfloat('PERCENT_OF_ADD_BUY')
+sell_add_buy_time: float = VM_order_config.getfloat('SELL_ADD_BUY_TIME')
 
 
 def volatility_strategy(coins_name: list):
@@ -51,6 +52,7 @@ def volatility_strategy(coins_name: list):
                     continue
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(ADDBUY)| {coin.bought_amount}원\033[0m')
                 log_file.write(f'{get_now_time()}, {coin.coin_name}, ADDBUY, {coin.bought_amount}\n')
+                percent_dif = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
 
             # 매도 조건
             # 1. 시간 캔들이 바뀐 경우
@@ -58,9 +60,13 @@ def volatility_strategy(coins_name: list):
             # 3. TODO 현재 캔들의 고가에서 기준이상 떨어진 경우 (deprecated)
             # 4. 추가 매수(ADDBUY) 상태 후 3~4분 후에 팔기
             if coin.check_time != now \
-                    or (coin.state in [State.BOUGHT, State.ADDBUY] and percent_dif < percent_of_stop_loss)\
-                    or (coin.state == State.ADDBUY and (datetime.now()-coin.buy_time).seconds > 180)\
+                    or (coin.state in [State.BOUGHT, State.ADDBUY] and percent_dif < percent_of_stop_loss) \
+                    or (coin.state == State.ADDBUY and (datetime.now()-coin.buy_time).seconds > sell_add_buy_time) \
                     or (coin.state == State.ADDBUY and percent_dif >= 2):
+                print(f'1. {coin.check_time != now} '
+                      f'2. {(coin.state in [State.BOUGHT, State.ADDBUY] and percent_dif < percent_of_stop_loss)} '
+                      f'3. {(coin.state == State.ADDBUY and (datetime.now()-coin.buy_time).seconds > sell_add_buy_time)} '
+                      f'4. {(coin.state == State.ADDBUY and percent_dif >= 2)}')
                 if coin.check_time != now and i == 0:
                     print(f'----------------------------------- UPDATE ---------------------------------------'
                           f'\n{coin.check_time} -> \033[36m{now}\033[0m')
@@ -83,7 +89,7 @@ def volatility_strategy(coins_name: list):
                     continue
 
                 # 매수
-                buy_result = coin.buy_coin(price=10000)
+                buy_result = coin.buy_coin(price=6000)
                 if not buy_result:
                     continue
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| {coin.bought_amount}원\033[0m')

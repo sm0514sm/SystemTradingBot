@@ -41,7 +41,7 @@ class Coin:
     # 매수 개수 확인
     def update_balance(self):
         for _ in range(10):
-            time.sleep(0.3)
+            time.sleep(0.5)
             for account in get_account():
                 if account.get('currency') == self.coin_name:
                     self.balance = account.get('balance')
