@@ -38,48 +38,54 @@ def volatility_strategy(coins_name: list):
             candles = get_candles('KRW-' + coin.coin_name, count=2, minute=unit, candle_type=candle_type)
             coin.high_price = max(candles[0]["trade_price"], coin.high_price)
             now = candles[0]['candle_date_time_kst']
+
+            if coin.state in [State.BOUGHT, State.ADDBUY]:
+                coin.earnings_ratio = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
+                coin.max_earnings_ratio = max(coin.earnings_ratio, coin.max_earnings_ratio)
             if coin.state == State.WAIT:
                 print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
                       f'목표 가: {coin.buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
-                      f' ({set_dif_color(candles[0]["trade_price"], coin.buy_price)})')
+                      f' ({set_dif_color(candles[0]["trade_price"], coin.buy_price)}) '
+                      f'최대 {coin.max_earnings_ratio:>6.2f} %')
             elif coin.state in [State.BOUGHT, State.ADDBUY]:
                 print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
                       f'구매 가: {coin.avg_buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
-                      f' ({set_dif_color(candles[0]["trade_price"], coin.avg_buy_price)})')
-            percent_dif = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
+                      f' ({set_dif_color(candles[0]["trade_price"], coin.avg_buy_price)}) '
+                      f'최대 {coin.max_earnings_ratio:6.2f} %')
 
             # 추가 매수
-            if coin.state == State.BOUGHT and percent_dif >= percent_of_add_buy:
+            if coin.state == State.BOUGHT and coin.earnings_ratio >= percent_of_add_buy:
                 # 매수
-                buy_result = coin.buy_coin(price=290000, addbuy=True)
+                buy_result = coin.buy_coin(price=294000, addbuy=True)
                 if not buy_result:
                     continue
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(ADDBUY)| {coin.bought_amount}원\033[0m')
                 log_file.write(f'{get_now_time()}, {coin.coin_name}, ADDBUY, {coin.bought_amount}\n')
-                percent_dif = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
+                coin.earnings_ratio = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
+                coin.max_earnings_ratio = 0
 
             # 매도 조건
             # 1. 시간 캔들이 바뀐 경우
-            # 2. 구매한 상태이고 손실 기준보다 현재가격이 낮은 경우
-            # 3. TODO 현재 캔들의 고가에서 기준이상 떨어진 경우 (deprecated)
-            # 4. 추가 매수(ADDBUY) 상태 후 3~4분 후에 팔기
+            # 2. 구매한 상태이고 수익률이 손실 기준보다 현재가격이 낮은 경우
+            # 3. 현재 캔들의 고가에서 기준이상 떨어진 경우
             if coin.check_time != now \
-                    or (coin.state in [State.BOUGHT, State.ADDBUY] and percent_dif < percent_of_stop_loss) \
-                    or (coin.state == State.ADDBUY and (datetime.now()-coin.buy_time).seconds > sell_add_buy_time) \
-                    or (coin.state == State.ADDBUY and percent_dif >= 2):
-                print(f'1. {coin.check_time != now} '
-                      f'2. {(coin.state in [State.BOUGHT, State.ADDBUY] and percent_dif < percent_of_stop_loss)} '
-                      f'3. {(coin.state == State.ADDBUY and (datetime.now()-coin.buy_time).seconds > sell_add_buy_time)} '
-                      f'4. {(coin.state == State.ADDBUY and percent_dif >= 2)}')
+                    or (coin.state in [State.BOUGHT, State.ADDBUY]
+                        and coin.earnings_ratio < max_drop_rule(coin.max_earnings_ratio)):
+                print(f'1. time_change: {coin.check_time != now} '
+                      f'2. is_buy: {coin.state in [State.BOUGHT, State.ADDBUY]} '
+                      f'3. ratio_drop: {coin.earnings_ratio < max_drop_rule(coin.max_earnings_ratio)} '
+                      f'({coin.earnings_ratio} < {max_drop_rule(coin.max_earnings_ratio)})')
                 if coin.check_time != now and i == 0:
                     print(f'----------------------------------- UPDATE ---------------------------------------'
                           f'\n{coin.check_time} -> \033[36m{now}\033[0m')
                 if coin.state in [State.BOUGHT, State.ADDBUY]:
                     sell_result = coin.sell_coin()
-                    print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| {int(round(get_total_sell_price(sell_result)))}원\033[0m')
-                    log_file.write(f'{get_now_time()}, {coin.coin_name}, SELL, {int(round(get_total_sell_price(sell_result)))}\n')
+                    print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| {int(round(get_sell_price(sell_result)))}원\033[0m')
+                    log_file.write(f'{get_now_time()}, {coin.coin_name}, SELL, {int(round(get_sell_price(sell_result)))}\n')
                 if coin.check_time != now:
                     coin.state = State.WAIT
+                    coin.max_earnings_ratio = 0
+                    coin.earnings_ratio = 0
                 if coin.check_time != now and i == len(coin_dict) - 1:
                     print(f'---------------------------------------------------------------------------------')
                 coin.check_time = now
@@ -98,6 +104,13 @@ def volatility_strategy(coins_name: list):
                     continue
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| {coin.bought_amount}원\033[0m')
                 log_file.write(f'{get_now_time()}, {coin.coin_name}, BUY, {coin.bought_amount}\n')
+
+
+# 최대 수익률 대비 몇 % 떨어지면 팔지 계산
+def max_drop_rule(max_earnings_ratio):
+    if max_earnings_ratio < 5:
+        return percent_of_stop_loss
+    return max_earnings_ratio - max_earnings_ratio // 5
 
 
 def set_state_color(state) -> str:
@@ -119,14 +132,3 @@ def set_dif_color(a, b) -> str:
 
 if __name__ == '__main__':
     volatility_strategy(get_market_code(div_cnt=coin_div_cnt, maximum=coin_maximum)[coin_div_select])
-
-'''
-['BTC', 'ETH', 'NEO', 'MTL', 'LTC', 'XRP', 'ETC', 'OMG', 'SNT', 'WAVES', 'XEM', 'QTUM', 'LSK', 'STEEM', 'XLM',
-         'ARDR', 'KMD', 'ARK', 'STORJ', 'GRS', 'REP', 'EMC2', 'ADA', 'SBD', 'POWR', 'BTG', 'ICX', 'EOS', 'TRX', 'SC',
-         'IGNIS', 'ONT', 'ZIL', 'POLY', 'ZRX', 'SRN', 'LOOM', 'BCH', 'ADX', 'BAT', 'IOST', 'DMT', 'RFR', 'CVC', 'IQ',
-         'IOTA', 'MFT', 'ONG', 'GAS', 'UPP', 'ELF', 'KNC', 'BSV', 'THETA', 'EDR', 'QKC', 'BTT', 'MOC', 'ENJ', 'TFUEL',
-         'MANA', 'ANKR', 'NPXS', 'AERGO', 'ATOM', 'TT', 'CRE', 'SOLVE', 'MBL', 'TSHP', 'WAXP', 'HBAR', 'MED', 'MLK',
-         'STPT', 'ORBS', 'VET', 'CHZ', 'PXL', 'STMX', 'DKA', 'HIVE', 'KAVA', 'AHT', 'SPND', 'LINK', 'XTZ', 'BORA',
-         'JST', 'CRO', 'TON', 'SXP', 'LAMB', 'HUNT', 'MARO', 'PLA', 'DOT', 'SRM', 'MVL', 'PCI', 'STRAX', 'AQT', 'BCHA',
-         'GLM', 'QTCON', 'SSX', 'META', 'OBSR', 'FCT2', 'LBC', 'CBK', 'SAND', 'HUM', 'DOGE']
-'''

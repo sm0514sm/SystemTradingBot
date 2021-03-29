@@ -44,10 +44,10 @@ def short_volatility_strategy(coins_name: list):
                         print(f'\033[100m{get_now_time()} {coin.coin_name}( ERROR)|\033[0m')
                     else:
                         print(f'\033[104m{get_now_time()} {coin.coin_name}(  SELL)| '
-                              f'{int(get_total_sell_price(access_key))}\033[0m')
+                              f'{int(get_sell_price(access_key))}\033[0m')
                         with open("../logs/VB_order.log", "a") as f:
                             f.write(f'{get_now_time()} {coin.coin_name}(  SELL)| '
-                                    f'{int(get_total_sell_price(access_key))}원\n')
+                                    f'{int(get_sell_price(access_key))}원\n')
                     if coin.state == State.TRYBUY:
                         coin.cansel_buy()
                         print(f'\033[104m{get_now_time()} {coin.coin_name}( CANCEL)|\033[0m')
@@ -72,10 +72,10 @@ def short_volatility_strategy(coins_name: list):
                                 f'{buy_result.get("locked"):>6}원\033[0m')
                 else:
                     print(f'\033[101m{get_now_time()} {coin.coin_name}(   BUY)| '
-                          f'{int(get_total_buy_price(coin.coin_name))}원\033[0m')
+                          f'{int(get_buy_price(coin.coin_name))}원\033[0m')
                     with open("../logs/VB_order.log", "a") as f:
                         f.write(f'{get_now_time()} {coin.coin_name}(   BUY)| '
-                                f'{int(get_total_buy_price(coin.coin_name))}원\n')
+                                f'{int(get_buy_price(coin.coin_name))}원\n')
 
 
 def set_state_color(state) -> str:

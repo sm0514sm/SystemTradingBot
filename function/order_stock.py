@@ -94,7 +94,7 @@ def sell_stock(market: str, volume: float, sleep: float = 1.5) -> dict:
     return res.json()
 
 
-def get_total_buy_price(market) -> float:
+def get_buy_price(market) -> float:
     query = {
         'market': f'KRW-{market}',
     }
@@ -118,12 +118,12 @@ def get_total_buy_price(market) -> float:
         res = requests.get("https://api.upbit.com/v1/orders/chance", params=query, headers=headers).json()
     except ConnectionError:
         time.sleep(0.5)
-        return get_total_buy_price(market)
+        return get_buy_price(market)
     ask_account = res.get('ask_account')
     return float(ask_account.get('balance')) * float(ask_account.get('avg_buy_price'))
 
 
-def get_total_sell_price(uuid_value):
+def get_sell_price(uuid_value):
     query = {
         'uuid': uuid_value,
     }
@@ -148,8 +148,10 @@ def get_total_sell_price(uuid_value):
         res = requests.get("https://api.upbit.com/v1/order", params=query, headers=headers).json()
     except ConnectionError:
         time.sleep(0.5)
-        return get_total_sell_price(uuid_value)
+        return get_sell_price(uuid_value)
     print("get_total_sell_price: res", res, res.get('paid_fee'))
+    if res.get('error'):
+        return 0
     sell_price = -float(res.get('paid_fee'))
     for trade in res.get('trades'):
         sell_price += float(trade.get('price')) * float(trade.get('volume'))

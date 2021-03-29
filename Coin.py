@@ -25,9 +25,9 @@ class State(IntEnum):
 class Coin:
     # price는 코인의 가격, amount는 원화가
     # amount = price * volume
-    def __init__(self, coin_name: str):
+    def __init__(self, coin_name: str, check_time: str = ""):
         self.coin_name: str = coin_name
-        self.check_time: str = ""
+        self.check_time: str = check_time
         self.balance: float = 0
         self.state: IntEnum = State.WAIT
         self.variability: float = 0
@@ -37,6 +37,8 @@ class Coin:
         self.avg_buy_price: float = 0  # 구매한 코인 평균가격
         self.buy_time: datetime = datetime(2021, 1, 1)  # 구매한 시점
         self.high_price: float = 0
+        self.earnings_ratio: float = 0  # 현재 코인 수익률
+        self.max_earnings_ratio: float = 0  # 현재 봉에서 최대 수익률
 
     # 매수 개수 확인
     def update_balance(self):
