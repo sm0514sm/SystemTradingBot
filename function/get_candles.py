@@ -18,8 +18,9 @@ def get_candles(market: str, count: int, sleep: float = 0.0, minute: int = 1, ca
         # print_sm(response)
         # print_sm(json.dumps(response.json(), indent=2))
         res_list: list = response.json()
+        tes = res_list[0]
         return res_list
-    except (json.decoder.JSONDecodeError, requests.exceptions.ConnectionError) as e:
+    except (json.decoder.JSONDecodeError, requests.exceptions.ConnectionError, KeyError) as e:
         time.sleep(sleep + 0.1)
         return get_candles(market, count, sleep, minute, candle_type)
 
