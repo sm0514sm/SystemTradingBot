@@ -61,7 +61,7 @@ class Coin:
             buy_result = buy_stock(f'KRW-{self.coin_name}', price=price)
             self.state = State.ADDBUY if addbuy else State.BOUGHT
         if buy_result.get('error'):
-            self.state = State.WAIT
+            self.state = State.PASS
             return ""
         self.buy_time = datetime.now()
         self.uuid = buy_result.get('uuid')

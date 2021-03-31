@@ -5,6 +5,7 @@ from function.get_now_time import get_now_time
 from function.order_stock import *
 from function.print_your_config import print_order_config
 from function.get_market_code import get_market_code
+from function.get_account import *
 from datetime import datetime
 
 
@@ -28,6 +29,8 @@ coin_maximum: int = VM_order_config.getint('COIN_MAXIMUM')
 def volatility_strategy(coins_name: list):
     os.makedirs('logs', exist_ok=True)
     log_file = open("logs/VB_order.log", "a")
+    print(f'{get_now_time()} 시작가: {get_krw():.2f}')
+    log_file.write(f'{get_now_time()} 시작가: {get_krw():.2f}\n')
 
     print_order_config(config.items(section="VB_ORDER"))
     coin_dict = dict()
@@ -56,7 +59,7 @@ def volatility_strategy(coins_name: list):
             # 추가 매수
             if coin.state == State.BOUGHT and coin.earnings_ratio >= percent_of_add_buy:
                 # 매수
-                buy_result = coin.buy_coin(price=294000, addbuy=True)
+                buy_result = coin.buy_coin(price=194000, addbuy=True)
                 if not buy_result:
                     continue
                 print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(ADDBUY)| {coin.bought_amount}원\033[0m')
@@ -108,9 +111,9 @@ def volatility_strategy(coins_name: list):
 
 # 최대 수익률 대비 몇 % 떨어지면 팔지 계산
 def max_drop_rule(max_earnings_ratio):
-    if max_earnings_ratio < 5:
+    if max_earnings_ratio < 6:
         return percent_of_stop_loss
-    return max_earnings_ratio - max_earnings_ratio // 5
+    return max_earnings_ratio - max_earnings_ratio // 3
 
 
 def set_state_color(state) -> str:

@@ -32,6 +32,12 @@ def get_account() -> list:
     return res.json()
 
 
+def get_krw() -> float:
+    for acnt in get_account():
+        if acnt['currency'] == 'KRW':
+            return float(acnt['balance'])
+
+
 if __name__ == "__main__":
     # 계정 내 모든 코인 정보
     for account in get_account():

@@ -6,23 +6,26 @@ from function.sm_util import *
 
 
 def get_candles(market: str, count: int, sleep: float = 0.0, minute: int = 1, candle_type: str = "minutes") -> list:
+
+    time.sleep(sleep)
+    if candle_type == "days":
+        minute = ""
+    url = f"https://api.upbit.com/v1/candles/{candle_type}/{minute}"
+
+    querystring = {"market": market, "count": count}
+    res_list = []
     try:
-        time.sleep(sleep)
-        if candle_type == "days":
-            minute = ""
-        url = f"https://api.upbit.com/v1/candles/{candle_type}/{minute}"
-
-        querystring = {"market": market, "count": count}
-
         response = requests.request("GET", url, params=querystring)
         # print_sm(response)
         # print_sm(json.dumps(response.json(), indent=2))
         res_list: list = response.json()
         tes = res_list[0]
-        return res_list
     except (json.decoder.JSONDecodeError, requests.exceptions.ConnectionError, KeyError) as e:
+        print(res_list)
+        print(e)
         time.sleep(sleep + 0.1)
         return get_candles(market, count, sleep, minute, candle_type)
+    return res_list
 
 
 if __name__ == "__main__":
