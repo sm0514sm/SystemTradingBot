@@ -23,7 +23,7 @@ def get_candles(market: str, count: int, sleep: float = 0.0, minute: int = 1, ca
     except (json.decoder.JSONDecodeError, requests.exceptions.ConnectionError, KeyError) as e:
         print(res_list)
         print(e)
-        time.sleep(sleep + 0.1)
+        time.sleep(sleep + 0.25)
         return get_candles(market, count, sleep, minute, candle_type)
     return res_list
 
