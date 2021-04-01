@@ -113,7 +113,7 @@ def volatility_strategy(coins_name: list):
 def max_drop_rule(max_earnings_ratio):
     if max_earnings_ratio < 6:
         return percent_of_stop_loss
-    return max_earnings_ratio - max_earnings_ratio // 3
+    return max_earnings_ratio - max_earnings_ratio // 2.5
 
 
 def set_state_color(state) -> str:
