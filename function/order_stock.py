@@ -85,13 +85,15 @@ def sell_stock(market: str, volume: float, sleep: float = 1.5) -> dict:
     headers = {"Authorization": authorize_token}
 
     try:
-        res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers)
+        res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers).json()
+        if res.get('error') and res.get('name') == 'too_many_request_order':
+            raise ConnectionError
     except ConnectionError:
         time.sleep(0.5)
         return sell_stock(market, volume, sleep)
     time.sleep(sleep)
-    print_sm(f"sell_stock: {res.json()}")
-    return res.json()
+    print_sm(f"sell_stock: {res}")
+    return res
 
 
 def get_buy_price(market) -> float:
@@ -120,6 +122,7 @@ def get_buy_price(market) -> float:
         time.sleep(0.5)
         return get_buy_price(market)
     ask_account = res.get('ask_account')
+    print(ask_account)
     return float(ask_account.get('balance')) * float(ask_account.get('avg_buy_price'))
 
 
@@ -186,3 +189,7 @@ def cancel_buy(uuid_value):
         return cancel_buy(uuid_value)
 
     print(res.json())
+
+
+if __name__ == "__main__":
+    print(get_buy_price('SXP'))
