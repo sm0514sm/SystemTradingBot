@@ -111,9 +111,9 @@ def volatility_strategy(coins_name: list):
 
 # 최대 수익률 대비 몇 % 떨어지면 팔지 계산
 def max_drop_rule(max_earnings_ratio):
-    if max_earnings_ratio < 6:
+    if max_earnings_ratio < 3:
         return percent_of_stop_loss
-    return max_earnings_ratio - max_earnings_ratio // 3
+    return max_earnings_ratio - max_earnings_ratio // 2.5
 
 
 def set_state_color(state) -> str:
