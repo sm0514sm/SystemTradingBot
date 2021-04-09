@@ -6,7 +6,6 @@ from function.order_stock import *
 from function.print_your_config import print_order_config
 from function.get_market_code import get_market_code
 from function.get_account import *
-from datetime import datetime
 
 
 config = configparser.ConfigParser()
@@ -46,12 +45,12 @@ def volatility_strategy(coins_name: list):
                 coin.earnings_ratio = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
                 coin.max_earnings_ratio = max(coin.earnings_ratio, coin.max_earnings_ratio)
             if coin.state == State.WAIT:
-                print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
+                print(f'{get_now_time()} {coin.coin_name:>6}({set_state_color(coin.state)})| '
                       f'목표 가: {coin.buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
                       f' ({set_dif_color(candles[0]["trade_price"], coin.buy_price)}) '
                       f'최대 {coin.max_earnings_ratio:>6.2f} %')
             elif coin.state in [State.BOUGHT, State.ADDBUY]:
-                print(f'{get_now_time()} {coin.coin_name:>5}({set_state_color(coin.state)})| '
+                print(f'{get_now_time()} {coin.coin_name:>6}({set_state_color(coin.state)})| '
                       f'구매 가: {coin.avg_buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
                       f' ({set_dif_color(candles[0]["trade_price"], coin.avg_buy_price)}) '
                       f'최대 {coin.max_earnings_ratio:6.2f} %')
@@ -62,7 +61,7 @@ def volatility_strategy(coins_name: list):
                 buy_result = coin.buy_coin(price=194000, addbuy=True)
                 if not buy_result:
                     continue
-                print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(ADDBUY)| {coin.bought_amount}원\033[0m')
+                print(f'\033[101m{get_now_time()} {coin.coin_name:>6}(ADDBUY)| {coin.bought_amount}원\033[0m')
                 log_file.write(f'{get_now_time()}, {coin.coin_name}, ADDBUY, {coin.bought_amount}\n')
                 coin.earnings_ratio = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
                 coin.max_earnings_ratio = 0
@@ -83,7 +82,7 @@ def volatility_strategy(coins_name: list):
                           f'\n{coin.check_time} -> \033[36m{now}\033[0m')
                 if coin.state in [State.BOUGHT, State.ADDBUY]:
                     sell_result = coin.sell_coin()
-                    print(f'\033[104m{get_now_time()} {coin.coin_name:>5}(  SELL)| {int(round(get_sell_price(sell_result)))}원\033[0m')
+                    print(f'\033[104m{get_now_time()} {coin.coin_name:>6}(  SELL)| {int(round(get_sell_price(sell_result)))}원\033[0m')
                     log_file.write(f'{get_now_time()}, {coin.coin_name}, SELL, {int(round(get_sell_price(sell_result)))}\n')
                 if coin.check_time != now:
                     coin.state = State.WAIT
@@ -105,7 +104,7 @@ def volatility_strategy(coins_name: list):
                 buy_result = coin.buy_coin(price=6000)
                 if not buy_result:
                     continue
-                print(f'\033[101m{get_now_time()} {coin.coin_name:>5}(   BUY)| {coin.bought_amount}원\033[0m')
+                print(f'\033[101m{get_now_time()} {coin.coin_name:>6}(   BUY)| {coin.bought_amount}원\033[0m')
                 log_file.write(f'{get_now_time()}, {coin.coin_name}, BUY, {coin.bought_amount}\n')
 
 

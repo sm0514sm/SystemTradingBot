@@ -40,6 +40,9 @@ class Coin:
         self.earnings_ratio: float = 0  # 현재 코인 수익률
         self.max_earnings_ratio: float = 0  # 현재 봉에서 최대 수익률
 
+        self.MCS_bought_cnt: int = 0   # MCS 전략 기법에서 매수한 횟수
+        self.MCS_buy_price: list = [0, 0, 0, 0, 0]   # MCS 전략 기법에서 매수 목표 금액들
+
     # 매수 개수 확인
     def update_balance(self):
         for _ in range(10):
