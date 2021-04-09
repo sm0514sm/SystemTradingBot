@@ -39,12 +39,14 @@ def min_catch_strategy(coins_name: list):
             candles = get_candles('KRW-' + coin.coin_name, count=2, minute=unit, candle_type=candle_type)
             coin.high_price = max(candles[0]["trade_price"], coin.high_price)
             now = candles[0]['candle_date_time_kst']
-            print(f'{get_now_time()} {coin.coin_name:>6}({set_state_color(coin.state)}{coin.MCS_bought_cnt})| '
-                  f'목표 가: {coin.MCS_buy_price[coin.MCS_bought_cnt] if coin.MCS_bought_cnt < maximum_bought_cnt else 0:>11.2f}, '
-                  f'현재 가: {candles[0]["trade_price"]:>10},'
-                  f'구매 가: {coin.avg_buy_price:>11.2f}'
-                  f' ({set_dif_color(candles[0]["trade_price"], coin.MCS_buy_price[coin.MCS_bought_cnt])}) '
-                  f' ({set_dif_color(candles[0]["trade_price"], coin.avg_buy_price)}) ')
+
+            if coin.state != State.PASS:
+                print(f'{get_now_time()} {coin.coin_name:>6}({set_state_color(coin.state)}{coin.MCS_bought_cnt})| '
+                      f'목표 가: {coin.MCS_buy_price[coin.MCS_bought_cnt] if coin.MCS_bought_cnt < maximum_bought_cnt else 0:>11.2f}, '
+                      f'현재 가: {candles[0]["trade_price"]:>10},'
+                      f'구매 가: {coin.avg_buy_price:>11.2f}'
+                      f' ({set_dif_color(candles[0]["trade_price"], coin.MCS_buy_price[coin.MCS_bought_cnt] if coin.MCS_bought_cnt < maximum_bought_cnt else 0)}) '
+                      f' ({set_dif_color(candles[0]["trade_price"], coin.avg_buy_price)}) ')
 
             # 매도 조건
             # 시간 캔들이 바뀐 경우
@@ -64,7 +66,9 @@ def min_catch_strategy(coins_name: list):
                 coin.check_time = now
                 coin.variability = candles[1]['high_price'] - candles[1]['low_price']
                 coin.high_price = candles[0]["opening_price"]
-                if coin.variability < coin.high_price * 0.02:
+
+                print(coin.variability, coin.high_price * 0.015)
+                if coin.variability < coin.high_price * 0.015:
                     coin.state = State.PASS
                 coin.avg_buy_price = 0
 
@@ -75,7 +79,9 @@ def min_catch_strategy(coins_name: list):
                 if i == len(coin_dict) - 1:
                     print(f'---------------------------------------------------------------------------------')
             else:  # 시간이 동일하다면
-                if candles[0]['trade_price'] > coin.MCS_buy_price[coin.MCS_bought_cnt] or coin.MCS_bought_cnt >= maximum_bought_cnt:
+                if coin.MCS_bought_cnt >= maximum_bought_cnt\
+                        or candles[0]['trade_price'] > coin.MCS_buy_price[coin.MCS_bought_cnt]\
+                        or coin.state == State.PASS:
                     continue
 
                 # 매수
@@ -100,7 +106,7 @@ def set_dif_color(a, b) -> str:
     if b == 0:
         return f'{0:>6.2f}%'
     value = (a - b) / a * 100
-    if value < 0:
+    if value <= 0:
         return f'\033[34m{value:>6.2f}%\033[0m'
     else:
         return f'\033[31m{value:>6.2f}%\033[0m'
