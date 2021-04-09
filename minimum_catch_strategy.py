@@ -21,6 +21,7 @@ coin_maximum: int = MCS_order_config.getint('COIN_MAXIMUM')
 
 maximum_bought_cnt: int = MCS_order_config.getint('MAXIMUM_BOUGHT_CNT')
 buy_dif_range: float = MCS_order_config.getfloat('BUY_DIF_RANGE')
+buy_amount: int = MCS_order_config.getint('BUY_AMOUNT')
 
 
 def min_catch_strategy(coins_name: list):
@@ -63,6 +64,8 @@ def min_catch_strategy(coins_name: list):
                 coin.check_time = now
                 coin.variability = candles[1]['high_price'] - candles[1]['low_price']
                 coin.high_price = candles[0]["opening_price"]
+                if coin.variability < coin.high_price * 0.02:
+                    coin.state = State.PASS
                 coin.avg_buy_price = 0
 
                 coin.MCS_bought_cnt = 0
@@ -76,7 +79,7 @@ def min_catch_strategy(coins_name: list):
                     continue
 
                 # 매수
-                buy_result = coin.buy_coin(price=50000)
+                buy_result = coin.buy_coin(price=buy_amount)
                 coin.MCS_bought_cnt += 1
                 if not buy_result:
                     continue

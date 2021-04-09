@@ -17,7 +17,7 @@ def get_now_coin_info(market: str, sleep: float = 0):
 if __name__ == '__main__':
     while True:
         try:
-            print(get_now_coin_info(f"KRW-BTC", sleep=0.5))
+            print(get_now_coin_info(f"KRW-tRX", sleep=0.5))
         except json.decoder.JSONDecodeError:
             pass
 
