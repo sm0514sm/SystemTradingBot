@@ -43,4 +43,5 @@ if __name__ == "__main__":
     for account in get_account():
         if account['currency'] == 'KRW':
             continue
+        print(account)
         print(round(float(account['balance']) * float(account['avg_buy_price'])), account)
