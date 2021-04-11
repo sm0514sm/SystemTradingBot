@@ -56,7 +56,7 @@ def min_catch_strategy(coins_name: list):
                         print(f'----------------------------------- UPDATE ---------------------------------------'
                               f'\n{coin.check_time} -> \033[36m{now}\033[0m')
 
-                    if coin.state in [State.BOUGHT, State.ADDBUY]:
+                    if coin.state in [State.BOUGHT, State.ADDBUY] or coin.MCS_bought_cnt != 0:
                         sell_result = coin.sell_coin()
                         print(f'\033[104m{get_now_time()} {coin.coin_name:>6}(  SELL)| {int(round(get_sell_price(sell_result)))}원\033[0m')
                         log_file.write(f'{get_now_time()}, {coin.coin_name}, SELL, {int(round(get_sell_price(sell_result)))}\n')

@@ -32,6 +32,7 @@ class Coin:
         self.state: IntEnum = State.WAIT
         self.variability: float = 0
         self.buy_price: float = 0  # 목표 매수 금액
+        self.buy_balance: int = 0  # 구매할 한화
         self.uuid: str = ""
         self.bought_amount: float = 0  # 구매한 가격
         self.avg_buy_price: float = 0  # 구매한 코인 평균가격
