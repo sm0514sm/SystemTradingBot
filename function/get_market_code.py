@@ -22,7 +22,7 @@ def get_market_code(div_cnt=1, maximum=0, except_krw=True) -> list:
             continue
         KRW_markets.append(data['market'][4:])
 
-    len_codes = maximum if maximum != 0 else len(KRW_markets) // div_cnt
+    len_codes = maximum if maximum != 0 else (len(KRW_markets) // div_cnt) + 1
     for market in KRW_markets:
         codes.append(market)
         if len(codes) == len_codes:
