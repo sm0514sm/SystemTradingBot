@@ -54,7 +54,8 @@ def volatility_strategy(coins_name: list):
             # 매도 조건
             # 1. 시간 캔들이 바뀐 경우
             # 2. 수익률이 5 % 이상인 경우
-            if coin.check_time != now or (coin.state == State.BOUGHT and coin.earnings_ratio >= 2):
+            if coin.check_time != now or (coin.state == State.BOUGHT and coin.earnings_ratio >= 5)\
+                    or (coin.state == State.BOUGHT and coin.earnings_ratio <= -5):
                 print(f'1. time_change: {coin.check_time != now} '
                       f'2. ratio: {coin.earnings_ratio}')
                 if coin.check_time != now and i == 0:
