@@ -149,7 +149,8 @@ def get_sell_price(uuid_value):
 
     try:
         res = requests.get("https://api.upbit.com/v1/order", params=query, headers=headers).json()
-    except ConnectionError:
+    except (requests.exceptions.ConnectionError, ConnectionError) as e:
+        print(e)
         time.sleep(0.5)
         return get_sell_price(uuid_value)
     print("get_total_sell_price: res", res, res.get('paid_fee'))

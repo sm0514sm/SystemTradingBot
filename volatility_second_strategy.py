@@ -93,7 +93,7 @@ def volatility_strategy(coins_name: list):
 
 def cal_buy_balance(variability, base_price) -> int:
     # 0.01 ~ 0.2
-    base = min(variability / base_price, 0.3)
+    base = min(variability / base_price * 1.25, 0.4)
     if base <= 0.03:
         return 0
     return base * 100 * 10000
