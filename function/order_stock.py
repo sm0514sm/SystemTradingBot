@@ -54,7 +54,7 @@ def buy_stock(market: str, price: float, sleep: float = 1.5, volume: float = 0, 
 
     try:
         res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers)
-    except ConnectionError:
+    except (requests.exceptions.ConnectionError, ConnectionError) as e:
         time.sleep(0.5)
         return buy_stock(market, price, sleep, volume, ord_type)
     time.sleep(sleep)
@@ -88,7 +88,7 @@ def sell_stock(market: str, volume: float, sleep: float = 1.5) -> dict:
         res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers).json()
         if res.get('error') and res.get('name') == 'too_many_request_order':
             raise ConnectionError
-    except ConnectionError:
+    except (requests.exceptions.ConnectionError, ConnectionError) as e:
         time.sleep(0.5)
         return sell_stock(market, volume, sleep)
     time.sleep(sleep)
@@ -118,7 +118,7 @@ def get_buy_price(market) -> float:
     headers = {"Authorization": authorize_token}
     try:
         res = requests.get("https://api.upbit.com/v1/orders/chance", params=query, headers=headers).json()
-    except ConnectionError:
+    except (requests.exceptions.ConnectionError, ConnectionError) as e:
         time.sleep(0.5)
         return get_buy_price(market)
     ask_account = res.get('ask_account')
@@ -185,7 +185,7 @@ def cancel_buy(uuid_value):
 
     try:
         res = requests.delete("https://api.upbit.com/v1/order", params=query, headers=headers)
-    except ConnectionError:
+    except (requests.exceptions.ConnectionError, ConnectionError) as e: 
         time.sleep(0.5)
         return cancel_buy(uuid_value)
 

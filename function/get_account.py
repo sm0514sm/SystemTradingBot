@@ -26,7 +26,7 @@ def get_account() -> list:
     headers = {"Authorization": authorize_token}
     try:
         res = requests.get('https://api.upbit.com/v1/accounts', headers=headers)
-    except ConnectionError:
+    except (requests.exceptions.ConnectionError, ConnectionError):
         time.sleep(0.5)
         return get_account()
     return res.json()
