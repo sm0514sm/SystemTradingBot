@@ -53,13 +53,16 @@ def buy_stock(market: str, price: float, sleep: float = 1.5, volume: float = 0, 
     headers = {"Authorization": authorize_token}
 
     try:
-        res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers)
+        res = requests.post("https://api.upbit.com/v1/orders", params=query, headers=headers).json()
     except (requests.exceptions.ConnectionError, ConnectionError) as e:
         time.sleep(0.5)
         return buy_stock(market, price, sleep, volume, ord_type)
     time.sleep(sleep)
-    print_sm(f"buy_stock: {res.json()}")
-    return res.json()
+    if res.get('error'):
+        time.sleep(0.5)
+        return buy_stock(market, price, sleep, volume, ord_type)
+    print_sm(f"buy_stock: {res}")
+    return res
 
 
 def sell_stock(market: str, volume: float, sleep: float = 1.5) -> dict:
