@@ -124,6 +124,7 @@ def catch_min_max_strategy(coins_name: list):
         print(f"\n{get_now_time()} |{'COIN':-^10}|-{'MIN':-^10}|{'MAX':-^10}|{'STATUS':-^10}|{'CURRENT':-^10}|", end="")
         time.sleep(DELAY)
         for coin, current_price in get_current_price(coins_name).items():
+            print(coin[4:])
             print(f"\n{get_now_time()}  {coin:10}: {coin_dict[coin].min:10} {coin_dict[coin].max:10} "
                   f"{coin_dict[coin].status.name:^10} {current_price:10}", end=" ")
 
@@ -135,8 +136,12 @@ def catch_min_max_strategy(coins_name: list):
                 print(f"{coin_dict[coin].target_buy_price:.1f}", end=" ")
                 if current_price > coin_dict[coin].target_buy_price:
                     print(upbit.buy_market_order(coin, 10000))
+                    coin_dict[coin].avg_buy_price = upbit.get_avg_buy_price(coin[4:])
+                    print("avg_buy_price1: ", coin_dict[coin].avg_buy_price)
+                    time.sleep(1)
                     coin_dict[coin].status = Status.BOUGHT
                     coin_dict[coin].avg_buy_price = upbit.get_avg_buy_price(coin[4:])
+                    print("avg_buy_price2: ", coin_dict[coin].avg_buy_price)
             elif coin_dict[coin].status == Status.BOUGHT and current_price > coin_dict[coin].max:
                 coin_dict[coin].status = Status.SELL_READY
             elif coin_dict[coin].status == Status.SELL_READY:
@@ -147,8 +152,8 @@ def catch_min_max_strategy(coins_name: list):
                     print(upbit.sell_market_order(coin, upbit.get_balance(coin[4:])))
                     coin_dict[coin].status = Status.WAIT
                     coin_dict[coin].avg_sell_price = current_price
-                    print(f"{coin_dict[coin].avg_buy_price} -> {coin_dict[coin].avg_sell_price}"
-                          f"({(coin_dict[coin].avg_sell_price - coin_dict[coin].avg_buy_price) / coin_dict[coin].avg_buy_price})")
+                    print(f"{coin_dict[coin].avg_buy_price} -> {coin_dict[coin].avg_sell_price}")
+                    # f"({(coin_dict[coin].avg_sell_price - coin_dict[coin].avg_buy_price) / coin_dict[coin].avg_buy_price})")
                     coin_dict[coin] = Coin(coin_dict[coin].min, coin_dict[coin].max)  # 초기화
             else:
                 pass
