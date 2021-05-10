@@ -124,7 +124,6 @@ def catch_min_max_strategy(coins_name: list):
         print(f"\n{get_now_time()} |{'COIN':-^10}|-{'MIN':-^10}|{'MAX':-^10}|{'STATUS':-^10}|{'CURRENT':-^10}|", end="")
         time.sleep(DELAY)
         for coin, current_price in get_current_price(coins_name).items():
-            print(coin[4:])
             print(f"\n{get_now_time()}  {coin:10}: {coin_dict[coin].min:10} {coin_dict[coin].max:10} "
                   f"{coin_dict[coin].status.name:^10} {current_price:10}", end=" ")
 
