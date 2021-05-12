@@ -17,6 +17,11 @@
 # if SELL_READY and 현재가 < 최고가 * (1 - VALUE_K)면
 #   매도
 #   상태 = WAIT
+
+# 도지코인 예시
+# price: 624 (원)
+# volume: 10 (개)
+# amount: 6240 (원)
 import configparser
 
 from pyupbit import *
@@ -40,6 +45,7 @@ COUNT = CMMS_config.getint('COUNT')
 INTERVAL = CMMS_config.get('INTERVAL')
 VALUE_K = CMMS_config.getfloat('VALUE_K')
 DELAY = CMMS_config.getfloat('DELAY')
+BUY_AMOUNT = CMMS_config.getint('BUY_AMOUNT')
 
 
 class Status(Enum):
@@ -134,7 +140,7 @@ def catch_min_max_strategy(coins_name: list):
                 coin_dict[coin].target_buy_price = coin_dict[coin].min * (1 + VALUE_K)
                 print(f"{coin_dict[coin].target_buy_price:.1f}", end=" ")
                 if current_price > coin_dict[coin].target_buy_price:
-                    print(upbit.buy_market_order(coin, 10000))
+                    print(upbit.buy_market_order(coin, BUY_AMOUNT))
                     coin_dict[coin].avg_buy_price = upbit.get_avg_buy_price(coin[4:])
                     print("avg_buy_price1: ", coin_dict[coin].avg_buy_price)
                     time.sleep(1)
@@ -151,8 +157,8 @@ def catch_min_max_strategy(coins_name: list):
                     print(upbit.sell_market_order(coin, upbit.get_balance(coin[4:])))
                     coin_dict[coin].status = Status.WAIT
                     coin_dict[coin].avg_sell_price = current_price
-                    print(f"{coin_dict[coin].avg_buy_price} -> {coin_dict[coin].avg_sell_price}")
-                    # f"({(coin_dict[coin].avg_sell_price - coin_dict[coin].avg_buy_price) / coin_dict[coin].avg_buy_price})")
+                    print(f"{coin_dict[coin].avg_buy_price} -> {coin_dict[coin].avg_sell_price}"
+                          f"({(coin_dict[coin].avg_sell_price - coin_dict[coin].avg_buy_price) / coin_dict[coin].avg_buy_price})")
                     coin_dict[coin] = Coin(coin_dict[coin].min, coin_dict[coin].max)  # 초기화
             else:
                 pass
