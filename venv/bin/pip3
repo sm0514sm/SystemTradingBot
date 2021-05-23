@@ -1,4 +1,4 @@
-#!/Users/sangmin/Desktop/Main/Project/Coin_trading_bot/venv/bin/python
+#!/Users/sangmin/Desktop/Main/Project/CoinTradingBot/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

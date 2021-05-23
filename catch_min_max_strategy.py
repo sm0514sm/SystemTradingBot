@@ -23,11 +23,10 @@
 # volume: 10 (개)
 # amount: 6240 (원)
 import configparser
-
-from pyupbit import *
 from enum import Enum
+
 from function.get_now_time import get_now_time
-import time
+from pyupbit import *
 
 config = configparser.ConfigParser()
 config.read('config.ini', encoding='UTF8')
@@ -48,6 +47,7 @@ DELAY = CMMS_config.getfloat('DELAY')
 BUY_AMOUNT = CMMS_config.getint('BUY_AMOUNT')
 
 
+# 코인에 대한 상태 정보
 class Status(Enum):
     WAIT = 0
     BUY_READY = 1
@@ -77,7 +77,8 @@ class Coin(object):
                f'avg_sell_price:{self.avg_sell_price}, buy_volume:{self.buy_volume}, sell_volume:{self.sell_volume}}}'
 
 
-def get_coin_min_max(coins_name, cnt):
+# 코인의 정보(최소값, 최대값)을 가져옴
+def get_coin_min_max(coins_name, cnt) -> dict:
     print("get_coin_min_max")
     coin_dict = dict()
     for coin_name in coins_name:
@@ -86,7 +87,8 @@ def get_coin_min_max(coins_name, cnt):
     return coin_dict
 
 
-def reset_min_max(coin_dict: dict, cnt):
+# 코인의 정보(최소값, 최대값)을 업데이트 함
+def reset_min_max(coin_dict: dict, cnt) -> None:
     print("reset_min_max")
     for coin in coin_dict.keys():
         ohlcv = get_ohlcv(coin, interval=INTERVAL, count=cnt)
@@ -94,7 +96,8 @@ def reset_min_max(coin_dict: dict, cnt):
         coin_dict[coin].max = max(ohlcv['high'])
 
 
-def calculate_reset_cnt():
+# 얼마나 자주 전체 코인에 대한 정보를 업데이트할 것인지 결정
+def calculate_reset_cnt() -> int:
     cnt = 0
     if INTERVAL == "day":
         cnt = 86400 / DELAY
@@ -117,9 +120,25 @@ def calculate_reset_cnt():
     return min(1200, cnt)
 
 
+# 구매한 코인 정보를 가져와 업데이트
+def add_bought_coin_info(coin_dict: dict) -> None:
+    coins_info = upbit.get_balances()
+    for coin_info in coins_info:
+        if coin_info['currency'] == 'KRW':
+            continue
+        try:
+            coin: Coin = coin_dict['KRW-' + coin_info['currency']]
+            coin.status = Status.BOUGHT
+            coin.avg_buy_price = coin_info['avg_buy_price']
+            coin.buy_volume = coin_info['balance']
+        except KeyError:
+            pass
+
+
 def catch_min_max_strategy(coins_name: list):
     # {'coin_name': {min: 0, max: 0, status: 0}, ...}
     coin_dict = get_coin_min_max(coins_name, cnt=COUNT)
+    add_bought_coin_info(coin_dict)
     cnt = 0
     reset_cnt = calculate_reset_cnt()
     while True:
@@ -133,7 +152,8 @@ def catch_min_max_strategy(coins_name: list):
             print(f"\n{get_now_time()}  {coin:10}: {coin_dict[coin].min:10} {coin_dict[coin].max:10} "
                   f"{coin_dict[coin].status.name:^10} {current_price:10}", end=" ")
 
-            if coin_dict[coin].status == Status.WAIT and current_price < coin_dict[coin].min:
+            if coin_dict[coin].status == Status.WAIT and current_price < coin_dict[coin].min \
+                    and upbit.get_balance() >= BUY_AMOUNT:
                 coin_dict[coin].status = Status.BUY_READY
             elif coin_dict[coin].status == Status.BUY_READY:
                 coin_dict[coin].min = min(coin_dict[coin].min, current_price)
@@ -141,8 +161,6 @@ def catch_min_max_strategy(coins_name: list):
                 print(f"{coin_dict[coin].target_buy_price:.1f}", end=" ")
                 if current_price > coin_dict[coin].target_buy_price:
                     print(upbit.buy_market_order(coin, BUY_AMOUNT))
-                    coin_dict[coin].avg_buy_price = upbit.get_avg_buy_price(coin[4:])
-                    print("avg_buy_price1: ", coin_dict[coin].avg_buy_price)
                     time.sleep(1)
                     coin_dict[coin].status = Status.BOUGHT
                     coin_dict[coin].avg_buy_price = upbit.get_avg_buy_price(coin[4:])
