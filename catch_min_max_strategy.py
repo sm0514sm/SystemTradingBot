@@ -130,8 +130,8 @@ def add_bought_coin_info(coin_dict: dict) -> None:
         try:
             coin: Coin = coin_dict['KRW-' + coin_info['currency']]
             coin.status = Status.BOUGHT
-            coin.avg_buy_price = coin_info['avg_buy_price']
-            coin.buy_volume = coin_info['balance']
+            coin.avg_buy_price = float(coin_info['avg_buy_price'])
+            coin.buy_volume = float(coin_info['balance'])
         except KeyError:
             pass
 
@@ -168,7 +168,7 @@ def catch_min_max_strategy(coins_name: list):
                     print(upbit.buy_market_order(coin, BUY_AMOUNT))
                     time.sleep(1)
                     coin_dict[coin].status = Status.BOUGHT
-                    coin_dict[coin].avg_buy_price = upbit.get_avg_buy_price(coin[4:])
+                    coin_dict[coin].avg_buy_price = float(upbit.get_avg_buy_price(coin[4:]))
                     print("avg_buy_price2: ", coin_dict[coin].avg_buy_price)
             elif coin_dict[coin].status == Status.BOUGHT \
                 and (current_price > coin_dict[coin].max
