@@ -170,14 +170,16 @@ def catch_min_max_strategy(coins_name: list):
                     coin_dict[coin].status = Status.BOUGHT
                     coin_dict[coin].avg_buy_price = upbit.get_avg_buy_price(coin[4:])
                     print("avg_buy_price2: ", coin_dict[coin].avg_buy_price)
-            elif coin_dict[coin].status == Status.BOUGHT and current_price > coin_dict[coin].max:
+            elif coin_dict[coin].status == Status.BOUGHT \
+                and (current_price > coin_dict[coin].max
+                     or calculate_rate(current_price, coin_dict[coin].avg_buy_price) >= PROFIT_RATE):
                 coin_dict[coin].status = Status.SELL_READY
-            elif coin_dict[coin].status == Status.SELL_READY \
-                    and calculate_rate(current_price, coin_dict[coin].avg_buy_price) >= PROFIT_RATE:
+            elif coin_dict[coin].status == Status.SELL_READY:
                 coin_dict[coin].max = max(coin_dict[coin].max, current_price)
                 coin_dict[coin].target_sell_price = coin_dict[coin].max * (1 - VALUE_K)
                 print(f"{coin_dict[coin].target_sell_price:.1f}", end=" ")
-                if current_price < coin_dict[coin].target_sell_price:
+                if current_price < coin_dict[coin].target_sell_price\
+                        or calculate_rate(current_price, coin_dict[coin].avg_buy_price) >= PROFIT_RATE:
                     print(upbit.sell_market_order(coin, upbit.get_balance(coin[4:])))
                     coin_dict[coin].status = Status.WAIT
                     coin_dict[coin].avg_sell_price = current_price
