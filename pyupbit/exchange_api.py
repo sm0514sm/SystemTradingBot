@@ -1,3 +1,5 @@
+import time
+
 import jwt          # PyJWT
 import re
 import uuid
@@ -103,7 +105,8 @@ class Upbit:
                 return balance
         except Exception as x:
             print(x.__class__.__name__)
-            return None
+            time.sleep(2)
+            return self.get_balance(ticker, contain_req)
 
     def get_balance_t(self, ticker='KRW', contain_req=False):
         """
