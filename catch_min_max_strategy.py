@@ -45,6 +45,7 @@ INTERVAL = CMMS_config.get('INTERVAL')
 VALUE_K = CMMS_config.getfloat('VALUE_K')
 DELAY = CMMS_config.getfloat('DELAY')
 BUY_AMOUNT = CMMS_config.getint('BUY_AMOUNT')
+PROFIT_RATE = CMMS_config.getint('PROFIT_RATE')
 
 
 # 코인에 대한 상태 정보
@@ -135,6 +136,10 @@ def add_bought_coin_info(coin_dict: dict) -> None:
             pass
 
 
+def calculate_rate(target, base) -> float:
+    return (target - base) / base
+
+
 def catch_min_max_strategy(coins_name: list):
     # {'coin_name': {min: 0, max: 0, status: 0}, ...}
     coin_dict = get_coin_min_max(coins_name, cnt=COUNT)
@@ -167,7 +172,8 @@ def catch_min_max_strategy(coins_name: list):
                     print("avg_buy_price2: ", coin_dict[coin].avg_buy_price)
             elif coin_dict[coin].status == Status.BOUGHT and current_price > coin_dict[coin].max:
                 coin_dict[coin].status = Status.SELL_READY
-            elif coin_dict[coin].status == Status.SELL_READY:
+            elif coin_dict[coin].status == Status.SELL_READY \
+                    and calculate_rate(current_price, coin_dict[coin].avg_buy_price) >= PROFIT_RATE:
                 coin_dict[coin].max = max(coin_dict[coin].max, current_price)
                 coin_dict[coin].target_sell_price = coin_dict[coin].max * (1 - VALUE_K)
                 print(f"{coin_dict[coin].target_sell_price:.1f}", end=" ")
