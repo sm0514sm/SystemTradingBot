@@ -213,10 +213,10 @@ def get_current_price(ticker="KRW-BTC"):
             for content in contents:
                 market = content['market']
                 price = content['trade_price']
-                ret[market] = price
+                ret[market] = float(price)
             return ret
         else:
-            return contents[0]['trade_price']
+            return float(contents[0]['trade_price'])
     except Exception as x:
         print(x.__class__.__name__)
 
