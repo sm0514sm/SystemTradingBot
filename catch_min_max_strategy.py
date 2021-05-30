@@ -153,7 +153,7 @@ def catch_min_max_strategy(coins_name: list):
             cnt = 0
         print(f"\n{get_now_time()} |{'COIN':-^10}|-{'MIN':-^10}|{'MAX':-^10}|{'STATUS':-^10}|{'CURRENT':-^10}|", end="")
         time.sleep(DELAY)
-        for coin, current_price in get_current_price(coins_name).items():
+        for coin, current_price in get_current_prices(coins_name):
             print(f"\n{get_now_time()}  {coin:10}: {coin_dict[coin].min:10} {coin_dict[coin].max:10} "
                   f"{coin_dict[coin].status.name:^10} {current_price:10}", end=" ")
 
@@ -190,6 +190,17 @@ def catch_min_max_strategy(coins_name: list):
                 pass
 
 
+def get_current_prices(coins_name):
+    if len(coins_name) >= 100:
+        result1: dict = get_current_price(coins_name[:100])
+        result2: dict = get_current_price(coins_name[100:])
+        result1.update(result2)
+        return result1.items()
+    else:
+        return get_current_prices(coins_name)
+
+
 if __name__ == "__main__":
     # catch_min_max_strategy(["KRW-BTC", "KRW-ETC", "KRW-ETH", "KRW-DOGE"])
+    # catch_min_max_strategy(["KRW-FCT2"])
     catch_min_max_strategy(get_tickers(fiat="KRW"))
