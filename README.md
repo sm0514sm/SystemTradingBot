@@ -30,7 +30,7 @@ Set your API keys on `config.ini.sample` and remove `.sample` of this file.
 
 **주의**: 단타(30분 아래 분봉)의 경우, UPBIT API 제공에 따른 실시간 가격에 오차가 있을 수 있습니다. 최소 30분봉 Config를 추천합니다.
 
-### 3. Minimum Catch Strategy :new:
+### 3. Minimum Catch Strategy
 
 >   **현재 가격 <= 현재 캔들의 시가 + 이전 캔들의 변동성(고가 - 저가)의 일정 비율 X `N번`** 인 경우 매수하여 다음 캔들에 매도하는 전략. 즉, 저점에 매수하여 반등된 수익을 얻기위함
 
@@ -38,4 +38,7 @@ Set your API keys on `config.ini.sample` and remove `.sample` of this file.
 
 **주의**: 거래가가 하락했을 때 매수를 추가하기 때문에, 완전한 하락세에는 매우 높은 손해를 볼 수 있습니다.
 
-<br>
+### 4. Catch Min Max Strategy  :new:
+
+<img src="_img/image-20210512125714015.png" alt="image-20210512125714015" style="zoom: 50%;" />
+
