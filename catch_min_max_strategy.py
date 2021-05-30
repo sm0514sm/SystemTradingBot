@@ -151,11 +151,12 @@ def catch_min_max_strategy(coins_name: list):
         if cnt > reset_cnt:
             reset_min_max(coin_dict, cnt=COUNT)
             cnt = 0
-        print(f"\n{get_now_time()} |{'COIN':-^10}|-{'MIN':-^10}|{'MAX':-^10}|{'STATUS':-^10}|{'CURRENT':-^10}|", end="")
+        print(f"\n{get_now_time()} "
+              f"|{'COIN':-^10}|-{'MIN':-^10}|{'MAX':-^10}|{'STATUS':-^10}|{'CURRENT':-^10}"
+              f"|{'TG_PRICE':-^10}|{'RATE':-^10}|", end="")
         time.sleep(DELAY)
         for coin, current_price in get_current_prices(coins_name):
-            print(f"\n{get_now_time()}  {coin:10}: {coin_dict[coin].min:10} {coin_dict[coin].max:10} "
-                  f"{coin_dict[coin].status.name:^10} {current_price:10}", end=" ")
+            print_log(coin, coin_dict, current_price)
 
             if coin_dict[coin].status == Status.WAIT and current_price < coin_dict[coin].min \
                     and upbit.get_balance() >= BUY_AMOUNT:
@@ -163,7 +164,6 @@ def catch_min_max_strategy(coins_name: list):
             elif coin_dict[coin].status == Status.BUY_READY:
                 coin_dict[coin].min = min(coin_dict[coin].min, current_price)
                 coin_dict[coin].target_buy_price = coin_dict[coin].min * (1 + VALUE_K)
-                print(f"{coin_dict[coin].target_buy_price:.1f}", end=" ")
                 if current_price > coin_dict[coin].target_buy_price:
                     print(upbit.buy_market_order(coin, BUY_AMOUNT))
                     time.sleep(1)
@@ -171,23 +171,40 @@ def catch_min_max_strategy(coins_name: list):
                     coin_dict[coin].avg_buy_price = float(upbit.get_avg_buy_price(coin[4:]))
                     print("avg_buy_price2: ", coin_dict[coin].avg_buy_price)
             elif coin_dict[coin].status == Status.BOUGHT \
-                and (current_price > coin_dict[coin].max
-                     or calculate_rate(current_price, coin_dict[coin].avg_buy_price) >= PROFIT_RATE):
+                    and (current_price > coin_dict[coin].max
+                         or calculate_rate(current_price, coin_dict[coin].avg_buy_price) >= PROFIT_RATE):
                 coin_dict[coin].status = Status.SELL_READY
             elif coin_dict[coin].status == Status.SELL_READY:
                 coin_dict[coin].max = max(coin_dict[coin].max, current_price)
                 coin_dict[coin].target_sell_price = coin_dict[coin].max * (1 - VALUE_K)
                 print(f"{coin_dict[coin].target_sell_price:.1f}", end=" ")
-                if current_price < coin_dict[coin].target_sell_price\
+                if current_price < coin_dict[coin].target_sell_price \
                         or calculate_rate(current_price, coin_dict[coin].avg_buy_price) >= PROFIT_RATE:
                     print(upbit.sell_market_order(coin, upbit.get_balance(coin[4:])))
                     coin_dict[coin].status = Status.WAIT
                     coin_dict[coin].avg_sell_price = current_price
                     print(f"{coin_dict[coin].avg_buy_price} -> {coin_dict[coin].avg_sell_price}"
-                          f"({(coin_dict[coin].avg_sell_price - coin_dict[coin].avg_buy_price) / coin_dict[coin].avg_buy_price})")
+                          f"({calculate_rate(coin_dict[coin].avg_sell_price, coin_dict[coin].avg_buy_price)})")
                     coin_dict[coin] = Coin(coin_dict[coin].min, coin_dict[coin].max)  # 초기화
             else:
                 pass
+
+
+def print_log(coin, coin_dict, current_price):
+    print(f"\n{get_now_time()}  {coin:10}: {coin_dict[coin].min:10} {coin_dict[coin].max:10} "
+          f"{coin_dict[coin].status.name:^10} {current_price:10}"
+          , end=" ")
+    if coin_dict[coin].status == Status.WAIT:
+        pass
+    elif coin_dict[coin].status == Status.BUY_READY:
+        print(f"{coin_dict[coin].target_buy_price:.1f}"
+              , end=" ")
+    elif coin_dict[coin].status == Status.BOUGHT:
+        print(f"{' ':10} "
+              f"{(str(round(calculate_rate(current_price, coin_dict[coin].avg_buy_price) * 100, 2)) + '%'):>10}"
+              , end=" ")
+    elif coin_dict[coin].status == Status.SELL_READY:
+        pass
 
 
 def get_current_prices(coins_name):
