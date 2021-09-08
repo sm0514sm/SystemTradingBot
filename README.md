@@ -7,6 +7,9 @@ Set your API keys on `config.ini.sample` and remove `.sample` of this file.
 
 **You can run ONLY one strategy!!!**
 
+
+<iframe width="768" height="432" src="https://miro.com/app/live-embed/o9J_lyNYyn8=/?moveToViewport=-1636,-927,2948,1458" frameBorder="0" scrolling="no" allowFullScreen></iframe>
+
 ## How to Start
 > - `pip3 install -r requirements.txt`.
 > 1.   LINUX: `source venv/bin/activate`
