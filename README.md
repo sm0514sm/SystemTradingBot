@@ -15,8 +15,8 @@
 
 #### Stock Trading
 
-- Enviroment: Windows
-- python >= 3.7   (주의! **_32bit_**)
+- Enviroment: Only Windows
+- python >= 3.7   ==(주의! **_32bit_**)==
 - 관리자 권한 실행
 - CybosPlus 실행
 
