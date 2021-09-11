@@ -23,10 +23,7 @@
 ## How to Start
 1. `pip3 install -r requirements.txt`.
 2. `config.ini.sample` 이름 변경 및 설정 -> `config.ini`
-3. (추가) 가상환경 실행
-   1. LINUX: `source venv/bin/activate`
-   2. WINDOWS: `source venv2/bin/activate`
-4. `python3 ${SYSTEM_TYPE} ${STRATEGY}`
+3. `python3 ${SYSTEM_TYPE} ${STRATEGY}`
    1. `SYSTEM_TYPE`: `coin`, `stock`
    2. `STARTEGY`: `FV`, `VB`, `CM`, `CMM`
    
