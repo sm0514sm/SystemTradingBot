@@ -42,7 +42,28 @@ class AbstractTradingConnector(metaclass=ABCMeta):
         """
         pass
 
-    def __getattribute__(self, name):
-        if callable(object.__getattribute__(self, name)) and not name.startswith('__'):
-            self.logger.debug(f"{type(self).__name__}.{name}")
-        return object.__getattribute__(self, name)
+    @abstractmethod
+    def get_current_prices(self, names):
+        """ name 종목들의 현재가를 반환
+        Args:
+            names: 조회할 종목들
+        """
+        pass
+
+    @abstractmethod
+    def get_min_max(self, names):
+        """ names 종목들의 기간중 최소최대 가격 조회
+        Args:
+            names: 조회할 종목명들
+        """
+        pass
+
+    @abstractmethod
+    def get_balance(self, name="KRW"):
+        """ 현재 가지고 있는 종목 수량 조회 (기본값 KRW) """
+        pass
+
+    @abstractmethod
+    def get_avg_buy_price(self, name):
+        """ 현재 가지고 있는 종목의 평균 매수가 조회 """
+        pass

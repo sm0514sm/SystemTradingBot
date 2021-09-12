@@ -5,7 +5,7 @@ from strategy_type import StrategyFactory
 from strategy_type.AbstractStrategy import AbstractStrategy
 from trading_connector import TradingConnectorFactory
 from trading_connector.AbstractTradingConnector import AbstractTradingConnector
-from util.ColorFormatter import ColorFormatter
+from util.ColorFormatter import ColorFormatter, MethodLoggerFormatter
 
 trading_connector_list = ["coin", "stock"]
 strategy_list = ["FV", "VB", "CM", "CMM"]
@@ -17,6 +17,12 @@ def logger_setting():
     ch.setLevel(logging.DEBUG)
     ch.setFormatter(ColorFormatter())
     logger.addHandler(ch)
+
+    method_logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(MethodLoggerFormatter())
+    method_logger.addHandler(ch)
 
 
 def is_valid_strategy(strategy):
@@ -39,7 +45,9 @@ def is_valid_trading(trading):
 
 if __name__ == "__main__":
     logger = logging.getLogger("SystemLogger")
+    method_logger = logging.getLogger("MethodLogger")
     logger_setting()
+
     if len(sys.argv) != 3:
         logger.error("입력 인자 개수가 부족합니다. (사용예시: 'python tradingbot_starter.py coin CMM')")
         exit()

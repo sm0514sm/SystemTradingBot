@@ -5,12 +5,12 @@ from trading_connector.AbstractTradingConnector import AbstractTradingConnector
 
 
 class AbstractStrategy(metaclass=ABCMeta):
-    trading_connector: AbstractTradingConnector
+    connector: AbstractTradingConnector
     logger = logging.getLogger("SystemLogger")
 
     def __init__(self, trading_connector: AbstractTradingConnector):
         self.logger.debug(type(self).__name__)
-        self.trading_connector = trading_connector
+        self.connector = trading_connector
         trading_connector.ready_trading()
 
     @abstractmethod
