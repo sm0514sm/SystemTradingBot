@@ -376,7 +376,7 @@ class Upbit:
 
                 url = "https://api.upbit.com/v1/orders"
                 data = {'market': ticker_or_uuid,
-                        'state': state,
+                        'status': state,
                         'kind': kind,
                         'order_by': 'desc'
                         }

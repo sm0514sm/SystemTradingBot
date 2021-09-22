@@ -141,7 +141,7 @@ def calculate_rate(target, base) -> float:
 
 
 def catch_min_max_strategy(coins_name: list):
-    # {'coin_name': {min: 0, max: 0, status: 0}, ...}
+    # {'name': {min: 0, max: 0, status: 0}, ...}
     coin_dict = get_coin_min_max(coins_name, cnt=COUNT)
     add_bought_coin_info(coin_dict)
     cnt = 0

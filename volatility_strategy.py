@@ -1,5 +1,5 @@
 import os
-from Coin import Coin, State
+from object.Coin import Coin, Status
 from function.get_candles import get_candles
 from function.get_now_time import get_now_time
 from function.order_stock import *
@@ -37,32 +37,32 @@ def volatility_strategy(coins_name: list):
         coin_dict[coin_name] = Coin(coin_name)
     while True:
         for i, coin in enumerate(coin_dict.values()):
-            candles = get_candles('KRW-' + coin.coin_name, count=2, minute=unit, candle_type=candle_type)
+            candles = get_candles('KRW-' + coin.name, count=2, minute=unit, candle_type=candle_type)
             coin.high_price = max(candles[0]["trade_price"], coin.high_price)
             now = candles[0]['candle_date_time_kst']
 
-            if coin.state in [State.BOUGHT, State.ADDBUY]:
+            if coin.status in [Status.BOUGHT, Status.ADDBUY]:
                 coin.earnings_ratio = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
                 coin.max_earnings_ratio = max(coin.earnings_ratio, coin.max_earnings_ratio)
-            if coin.state == State.WAIT:
-                print(f'{get_now_time()} {coin.coin_name:>6}({set_state_color(coin.state)})| '
+            if coin.status == Status.WAIT:
+                print(f'{get_now_time()} {coin.name:>6}({set_state_color(coin.status)})| '
                       f'목표 가: {coin.buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
                       f' ({set_dif_color(candles[0]["trade_price"], coin.buy_price)}) '
                       f'최대 {coin.max_earnings_ratio:>6.2f} %')
-            elif coin.state in [State.BOUGHT, State.ADDBUY]:
-                print(f'{get_now_time()} {coin.coin_name:>6}({set_state_color(coin.state)})| '
+            elif coin.status in [Status.BOUGHT, Status.ADDBUY]:
+                print(f'{get_now_time()} {coin.name:>6}({set_state_color(coin.status)})| '
                       f'구매 가: {coin.avg_buy_price:>11.2f}, 현재 가: {candles[0]["trade_price"]:>10}'
                       f' ({set_dif_color(candles[0]["trade_price"], coin.avg_buy_price)}) '
                       f'최대 {coin.max_earnings_ratio:6.2f} %')
 
             # 추가 매수
-            if coin.state == State.BOUGHT and coin.earnings_ratio >= percent_of_add_buy:
+            if coin.status == Status.BOUGHT and coin.earnings_ratio >= percent_of_add_buy:
                 # 매수
                 buy_result = coin.buy_coin(price=194000, addbuy=True)
                 if not buy_result:
                     continue
-                print(f'\033[101m{get_now_time()} {coin.coin_name:>6}(ADDBUY)| {coin.bought_amount}원\033[0m')
-                log_file.write(f'{get_now_time()}, {coin.coin_name}, ADDBUY, {coin.bought_amount}\n')
+                print(f'\033[101m{get_now_time()} {coin.name:>6}(ADDBUY)| {coin.bought_amount}원\033[0m')
+                log_file.write(f'{get_now_time()}, {coin.name}, ADDBUY, {coin.bought_amount}\n')
                 coin.earnings_ratio = (candles[0]["trade_price"] - coin.avg_buy_price) / candles[0]["trade_price"] * 100
                 coin.max_earnings_ratio = 0
 
@@ -71,21 +71,21 @@ def volatility_strategy(coins_name: list):
             # 2. 구매한 상태이고 수익률이 손실 기준보다 현재가격이 낮은 경우
             # 3. 현재 캔들의 고가에서 기준이상 떨어진 경우
             if coin.check_time != now \
-                    or (coin.state in [State.BOUGHT, State.ADDBUY]
+                    or (coin.status in [Status.BOUGHT, Status.ADDBUY]
                         and coin.earnings_ratio < max_drop_rule(coin.max_earnings_ratio)):
                 print(f'1. time_change: {coin.check_time != now} '
-                      f'2. is_buy: {coin.state in [State.BOUGHT, State.ADDBUY]} '
+                      f'2. is_buy: {coin.status in [Status.BOUGHT, Status.ADDBUY]} '
                       f'3. ratio_drop: {coin.earnings_ratio < max_drop_rule(coin.max_earnings_ratio)} '
                       f'({coin.earnings_ratio} < {max_drop_rule(coin.max_earnings_ratio)})')
                 if coin.check_time != now and i == 0:
                     print(f'----------------------------------- UPDATE ---------------------------------------'
                           f'\n{coin.check_time} -> \033[36m{now}\033[0m')
-                if coin.state in [State.BOUGHT, State.ADDBUY]:
+                if coin.status in [Status.BOUGHT, Status.ADDBUY]:
                     sell_result = coin.sell_coin()
-                    print(f'\033[104m{get_now_time()} {coin.coin_name:>6}(  SELL)| {int(round(get_sell_price(sell_result)))}원\033[0m')
-                    log_file.write(f'{get_now_time()}, {coin.coin_name}, SELL, {int(round(get_sell_price(sell_result)))}\n')
+                    print(f'\033[104m{get_now_time()} {coin.name:>6}(  SELL)| {int(round(get_sell_price(sell_result)))}원\033[0m')
+                    log_file.write(f'{get_now_time()}, {coin.name}, SELL, {int(round(get_sell_price(sell_result)))}\n')
                 if coin.check_time != now:
-                    coin.state = State.WAIT
+                    coin.status = Status.WAIT
                     coin.max_earnings_ratio = 0
                     coin.earnings_ratio = 0
                 if coin.check_time != now and i == len(coin_dict) - 1:
@@ -95,7 +95,7 @@ def volatility_strategy(coins_name: list):
                 coin.buy_price = candles[0]["opening_price"] + coin.variability * (percent_buy_range / 100)
                 coin.high_price = candles[0]["opening_price"]
             else:  # 시간이 동일하다면
-                if coin.state != State.WAIT:
+                if coin.status != Status.WAIT:
                     continue
                 if coin.variability == 0 or candles[0]['trade_price'] < coin.buy_price:
                     continue
@@ -104,8 +104,8 @@ def volatility_strategy(coins_name: list):
                 buy_result = coin.buy_coin(price=6000)
                 if not buy_result:
                     continue
-                print(f'\033[101m{get_now_time()} {coin.coin_name:>6}(   BUY)| {coin.bought_amount}원\033[0m')
-                log_file.write(f'{get_now_time()}, {coin.coin_name}, BUY, {coin.bought_amount}\n')
+                print(f'\033[101m{get_now_time()} {coin.name:>6}(   BUY)| {coin.bought_amount}원\033[0m')
+                log_file.write(f'{get_now_time()}, {coin.name}, BUY, {coin.bought_amount}\n')
 
 
 # 최대 수익률 대비 몇 % 떨어지면 팔지 계산
@@ -116,9 +116,9 @@ def max_drop_rule(max_earnings_ratio):
 
 
 def set_state_color(state) -> str:
-    if state == State.BOUGHT:
+    if state == Status.BOUGHT:
         return f'\033[91m{state.name:>6}\033[0m'
-    elif state == State.ADDBUY:
+    elif state == Status.ADDBUY:
         return f'\033[96m{state.name:>6}\033[0m'
     else:
         return f'{state.name:>6}'

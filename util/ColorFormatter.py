@@ -10,7 +10,7 @@ class ColorFormatter(logging.Formatter):
     red = "\033[91m"
     rred = "\033[31m"
     reset = "\033[0m"
-    format = '%(asctime)s %(levelname)08s %(module)30s.py - %(funcName)20s %(lineno)3d | %(message)s'
+    format = '%(asctime)s %(levelname)08s %(module)30s.py - %(funcName)30s %(lineno)3d | %(message)s'
 
     FORMATS = {
         logging.DEBUG: grey + format + reset,

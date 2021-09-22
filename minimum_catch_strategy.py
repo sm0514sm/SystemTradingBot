@@ -1,5 +1,5 @@
 import os
-from Coin import Coin, State
+from object.Coin import Coin, Status
 from function.get_candles import get_candles
 from function.get_now_time import get_now_time
 from function.order_stock import *
@@ -37,12 +37,12 @@ def min_catch_strategy(coins_name: list):
     while True:
         for i, coin in enumerate(coin_dict.values()):
             try:
-                candles = get_candles('KRW-' + coin.coin_name, count=2, minute=UNIT, candle_type=CANDLE_TYPE)
+                candles = get_candles('KRW-' + coin.name, count=2, minute=UNIT, candle_type=CANDLE_TYPE)
                 coin.high_price = max(candles[0]["trade_price"], coin.high_price)
                 now = candles[0]['candle_date_time_kst']
 
-                if coin.state != State.PASS:
-                    print(f'{get_now_time()} {coin.coin_name:>6}({set_state_color(coin.state)}{coin.MCS_bought_cnt})| '
+                if coin.status != Status.PASS:
+                    print(f'{get_now_time()} {coin.name:>6}({set_state_color(coin.status)}{coin.MCS_bought_cnt})| '
                           f'목표 가: {coin.MCS_buy_price[coin.MCS_bought_cnt] if coin.MCS_bought_cnt < MAX_BOUGHT_CNT else 0:>11.2f}, '
                           f'현재 가: {candles[0]["trade_price"]:>10},'
                           f'구매 가: {coin.avg_buy_price:>11.2f}'
@@ -56,12 +56,12 @@ def min_catch_strategy(coins_name: list):
                         print(f'----------------------------------- UPDATE ---------------------------------------'
                               f'\n{coin.check_time} -> \033[36m{now}\033[0m')
 
-                    if coin.state in [State.BOUGHT, State.ADDBUY] or coin.MCS_bought_cnt != 0:
+                    if coin.status in [Status.BOUGHT, Status.ADDBUY] or coin.MCS_bought_cnt != 0:
                         sell_result = coin.sell_coin()
-                        print(f'\033[104m{get_now_time()} {coin.coin_name:>6}(  SELL)| {int(round(get_sell_price(sell_result)))}원\033[0m')
-                        log_file.write(f'{get_now_time()}, {coin.coin_name}, SELL, {int(round(get_sell_price(sell_result)))}\n')
+                        print(f'\033[104m{get_now_time()} {coin.name:>6}(  SELL)| {int(round(get_sell_price(sell_result)))}원\033[0m')
+                        log_file.write(f'{get_now_time()}, {coin.name}, SELL, {int(round(get_sell_price(sell_result)))}\n')
 
-                    coin.state = State.WAIT
+                    coin.status = Status.WAIT
                     coin.max_earnings_ratio = 0
                     coin.earnings_ratio = 0
                     coin.check_time = now
@@ -70,7 +70,7 @@ def min_catch_strategy(coins_name: list):
 
                     print(coin.variability, coin.high_price * 0.015)
                     if coin.variability < coin.high_price * 0.015:
-                        coin.state = State.PASS
+                        coin.status = Status.PASS
                     coin.avg_buy_price = 0
 
                     coin.MCS_bought_cnt = 0
@@ -82,7 +82,7 @@ def min_catch_strategy(coins_name: list):
                 else:  # 시간이 동일하다면
                     if coin.MCS_bought_cnt >= MAX_BOUGHT_CNT\
                             or candles[0]['trade_price'] > coin.MCS_buy_price[coin.MCS_bought_cnt]\
-                            or coin.state == State.PASS:
+                            or coin.status == Status.PASS:
                         continue
 
                     # 매수
@@ -90,16 +90,16 @@ def min_catch_strategy(coins_name: list):
                     coin.MCS_bought_cnt += 1
                     if not buy_result:
                         continue
-                    print(f'\033[101m{get_now_time()} {coin.coin_name:>6}(  BUY{coin.MCS_bought_cnt})| {coin.bought_amount}원\033[0m')
-                    log_file.write(f'{get_now_time()}, {coin.coin_name}, BUY{coin.MCS_bought_cnt}, {coin.bought_amount}\n')
+                    print(f'\033[101m{get_now_time()} {coin.name:>6}(  BUY{coin.MCS_bought_cnt})| {coin.bought_amount}원\033[0m')
+                    log_file.write(f'{get_now_time()}, {coin.name}, BUY{coin.MCS_bought_cnt}, {coin.bought_amount}\n')
             except IndexError as e:
                 continue
 
 
 def set_state_color(state) -> str:
-    if state == State.BOUGHT:
+    if state == Status.BOUGHT:
         return f'\033[91m{state.name:>6}\033[0m'
-    elif state == State.ADDBUY:
+    elif state == Status.ADDBUY:
         return f'\033[96m{state.name:>6}\033[0m'
     else:
         return f'{state.name:>6}'
