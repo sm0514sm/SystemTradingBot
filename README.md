@@ -1,3 +1,4 @@
+# 리팩토링중!!!!!!
 # SystemTradingBot
 
 - Coin Trading With Upbit API ([링크](https://docs.upbit.com/))
