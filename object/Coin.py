@@ -1,13 +1,13 @@
-from enum import IntEnum
+from enum import IntEnum, unique
 from datetime import datetime
 
 
-class Status(IntEnum):
+@unique
+class CmmStatus(IntEnum):
     PASS = 0  # 한번 매도 했던 코인은 다음번까지 매수하지 않음
     WAIT = 1
-    BOUGHT = 2
-    TRYBUY = 3
-    ADDBUY = 4
+    BOUGHT = 2      # 1개라도 산 경우
+    SELL_READY = 3  # 매도 준비 (매도 완료 후 PASS 상태)
     WARN = -1  # 유의종목
 
 
@@ -34,11 +34,12 @@ class Coin:
         self.name: str = coin_name
         self.check_time: str = check_time
         self.balance: float = 0
-        self.status: IntEnum = Status.WAIT
+        self.status: IntEnum = CmmStatus.WAIT
         self.current_price: float = 0
 
         self.variability: float = 0
 
+        self.dca_buy_cnt: int = 0  # 분할매수한 개수
         self.buy_price: float = 0  # 목표 매수 금액
         self.buy_volume: int = 0  # 구매한 개수
         self.bought_amount: float = 0  # 구매한 가격 (양)

@@ -1,14 +1,18 @@
 import pyupbit
-from object.Coin import Coin, Status
+from object.Coin import Coin, CmmStatus
 from trading_connector.AbstractTradingConnector import AbstractTradingConnector
 from util.MethodLoggerDecorator import method_logger_decorator, my_timer
 import configparser
 import sys
+import os
 
 
 class CoinTradingConnector(AbstractTradingConnector):
     def __init__(self):
         super().__init__()
+        if not self.check_config():
+            self.logger.error("coin_config.ini 파일이 유효하지 않아 프로그램을 종료합니다.")
+            exit(-1)
         config = configparser.ConfigParser()
         config.read(f'{sys.path[1]}/config/coin_config.ini', encoding='UTF8')
         upbit_config = config['UPBIT']
@@ -16,6 +20,24 @@ class CoinTradingConnector(AbstractTradingConnector):
         secret = upbit_config.get("UPBIT_OPEN_API_SECRET_KEY")
         self.upbit = pyupbit.Upbit(access, secret)
         self.cmm_config = config['CMM']
+
+    @method_logger_decorator
+    def check_config(self) -> bool:
+        config = configparser.ConfigParser()
+        if not os.path.isfile(f'{sys.path[1]}/config/coin_config.ini'):
+            self.logger.error("coin_config.ini 파일이 없습니다.")
+            return False
+        config.read(f'{sys.path[1]}/config/coin_config.ini', encoding='UTF8')
+        upbit_config = config['UPBIT']
+        access = upbit_config.get("UPBIT_OPEN_API_ACCESS_KEY")
+        secret = upbit_config.get("UPBIT_OPEN_API_SECRET_KEY")
+        if not access or len(access) != 40:
+            self.logger.error("UPBIT_OPEN_API_ACCESS_KEY 가 없거나 유효하지 않습니다.")
+            return False
+        if not secret or len(secret) != 40:
+            self.logger.error("UPBIT_OPEN_API_SECRET_KEY 가 없거나 유효하지 않습니다.")
+            return False
+        return True
 
     @method_logger_decorator
     def ready_trading(self):
@@ -81,7 +103,7 @@ class CoinTradingConnector(AbstractTradingConnector):
                 continue
             for coin in coin_list:
                 if coin.name == my_stock_info['currency']:
-                    coin.status = Status.BOUGHT
+                    coin.status = CmmStatus.BOUGHT
                     coin.avg_buy_price = float(my_stock_info['avg_buy_price'])
                     coin.buy_volume = float(my_stock_info['balance'])
                     break

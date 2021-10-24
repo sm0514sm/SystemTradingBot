@@ -28,7 +28,7 @@
    1. `SYSTEM_TYPE`: `coin`, `stock`
    2. `STARTEGY`: `FV`, `VB`, `CM`, `CMM`
    
-> 예) `python3 tradingbot coin FV`, `python3 tradingbot stock CMM`
+> 예) `python3 tradingbot_starter.py coin FV`, `python3 tradingbot_starter.py stock CMM`
 ---
 ## Strategy
 ### 1. [FV] Flipping Volume Strategy

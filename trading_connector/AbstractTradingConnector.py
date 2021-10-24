@@ -75,3 +75,8 @@ class AbstractTradingConnector(metaclass=ABCMeta):
     def add_bought_stock_info(self, stock_list):
         """ 이미 가지고 있는 종목들 정보 추가 """
         pass
+
+    @abstractmethod
+    def check_config(self):
+        """ 설정 파일 유효성 검사 """
+        pass

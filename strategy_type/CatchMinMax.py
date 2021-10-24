@@ -1,4 +1,4 @@
-from object.Coin import Coin, Status
+from object.Coin import Coin, CmmStatus
 from strategy_type.AbstractStrategy import AbstractStrategy
 from util.MethodLoggerDecorator import MethodLoggerDecorator, method_logger_decorator
 from datetime import datetime, date
@@ -20,10 +20,11 @@ class CatchMinMax(AbstractStrategy):
             self.connector.set_current_prices(stocks_list)
             for stock in stocks_list:
                 self.logger.debug(stock)
-                if stock.status == Status.WAIT and stock.current_price < stock.cmm_info.min \
+                if stock.status == CmmStatus.WAIT and stock.current_price < stock.cmm_info.min \
                         and self.connector.get_balance() >= 100000:
-                    stock.status = Status.BUY_READY
-                elif stock.status == Status.BUY_READY:
+                    self.connector.buy() # TODO 설정 필요
+                    stock.status = CmmStatus.BOUGHT
+                elif stock.status == CmmStatus.BUY_READY:
                     stock.cmm_info.min = min(stock.cmm_info.min, stock.current_price)
         #      stock_dict[stock].target_buy_price = stock_dict[stock].min * (1 + VALUE_K)
         #      if current_price > stock_dict[stock].target_buy_price:
