@@ -1,3 +1,5 @@
+import time
+
 import pyupbit
 from object.Coin import Coin, CmmStatus
 from trading_connector.AbstractTradingConnector import AbstractTradingConnector
@@ -10,34 +12,39 @@ import os
 class CoinTradingConnector(AbstractTradingConnector):
     def __init__(self):
         super().__init__()
-        if not self.check_config():
+        config = self.check_config()
+        if not config:
             self.logger.error("coin_config.ini 파일이 유효하지 않아 프로그램을 종료합니다.")
             exit(-1)
-        config = configparser.ConfigParser()
-        config.read(f'{sys.path[1]}/config/coin_config.ini', encoding='UTF8')
         upbit_config = config['UPBIT']
         access = upbit_config.get("UPBIT_OPEN_API_ACCESS_KEY")
         secret = upbit_config.get("UPBIT_OPEN_API_SECRET_KEY")
+
         self.upbit = pyupbit.Upbit(access, secret)
-        self.cmm_config = config['CMM']
+        self.cmm_config = dict(config['CMM'])
 
     @method_logger_decorator
-    def check_config(self) -> bool:
+    def check_config(self):
         config = configparser.ConfigParser()
         if not os.path.isfile(f'{sys.path[1]}/config/coin_config.ini'):
-            self.logger.error("coin_config.ini 파일이 없습니다.")
-            return False
-        config.read(f'{sys.path[1]}/config/coin_config.ini', encoding='UTF8')
+            if not os.path.isfile(f'config/coin_config.ini'):
+                self.logger.error(f'{sys.path[1]}/config/coin_config.ini 파일이 없습니다.')
+                return None
+            else:
+                config.read(f'config/coin_config.ini', encoding='UTF8')
+        else:
+            config.read(f'{sys.path[1]}/config/coin_config.ini', encoding='UTF8')
+
         upbit_config = config['UPBIT']
         access = upbit_config.get("UPBIT_OPEN_API_ACCESS_KEY")
         secret = upbit_config.get("UPBIT_OPEN_API_SECRET_KEY")
         if not access or len(access) != 40:
             self.logger.error("UPBIT_OPEN_API_ACCESS_KEY 가 없거나 유효하지 않습니다.")
-            return False
+            return None
         if not secret or len(secret) != 40:
             self.logger.error("UPBIT_OPEN_API_SECRET_KEY 가 없거나 유효하지 않습니다.")
-            return False
-        return True
+            return None
+        return config
 
     @method_logger_decorator
     def ready_trading(self):
@@ -48,16 +55,20 @@ class CoinTradingConnector(AbstractTradingConnector):
         return self.upbit.get_balances()
 
     @method_logger_decorator
-    def buy(self, name, price_amount):
-
-        pass
+    def buy(self, coin: Coin, price_amount):
+        order_log = self.upbit.buy_market_order(f"KRW-{coin.name}", price_amount)
+        uuid = order_log.get('uuid')
+        if not uuid:
+            self.logger.warning(order_log)
+            return
+        while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
+            time.sleep(1)
+        coin.dca_buy_cnt += 1
+        coin.avg_buy_price = self.get_balance_info(coin.name).get('avg_buy_price')
+        coin.status = CmmStatus.BOUGHT
 
     @method_logger_decorator
-    def sell(self, name, count_amount):
-        pass
-
-    @method_logger_decorator
-    def get_current_price(self, name):
+    def sell(self, coin: Coin, count_amount):
         pass
 
     @method_logger_decorator
@@ -67,23 +78,30 @@ class CoinTradingConnector(AbstractTradingConnector):
             current_price.update(pyupbit.get_current_price(['KRW-' + coin.name for coin in coins[100:]]))
         else:
             current_price = pyupbit.get_current_price(['KRW-' + coin.name for coin in coins])
-        print(current_price)
         for coin in coins:
             coin.current_price = current_price['KRW-' + coin.name]
 
     @method_logger_decorator
     def set_min_max(self, coins: list[Coin]):
         for coin in coins:
-            ohlcv = pyupbit.get_ohlcv("KRW-" + coin.name, interval='day', count=self.cmm_config.getint("COUNT"))
+            ohlcv = pyupbit.get_ohlcv("KRW-" + coin.name, interval='day', count=int(self.cmm_config["count"]))
             coin.set_cmm_info(min(ohlcv['low']), max(ohlcv['high']))
 
     @method_logger_decorator
-    def get_balance(self, name="KRW"):
-        pass
+    def get_balance_info(self, name: str = "KRW"):
+        for balance in self.upbit.get_balances():
+            if balance.get('currency') == name:
+                return balance
+        else:
+            self.logger.warning(f'{name}을 찾을 수 없습니다.')
 
     @method_logger_decorator
-    def get_avg_buy_price(self, name):
-        pass
+    def get_balance(self, name: str = "KRW"):
+        return self.upbit.get_balance(f"KRW-{name}")
+
+    @method_logger_decorator
+    def get_balance(self, coin: Coin):
+        return self.upbit.get_balance(f"KRW-{coin.name}")
 
     @method_logger_decorator
     def get_watching_list(self):
@@ -105,7 +123,9 @@ class CoinTradingConnector(AbstractTradingConnector):
                 if coin.name == my_stock_info['currency']:
                     coin.status = CmmStatus.BOUGHT
                     coin.avg_buy_price = float(my_stock_info['avg_buy_price'])
-                    coin.buy_volume = float(my_stock_info['balance'])
+                    coin.buy_volume_cnt = float(my_stock_info['balance'])
+                    if coin.dca_buy_cnt == 0:
+                        coin.dca_buy_cnt = 1
                     break
             else:
                 self.logger.warning(f"{my_stock_info['currency']}을 coin_list에서 찾을 수 없습니다.")
@@ -118,3 +138,11 @@ if __name__ == "__main__":
     conn.add_bought_stock_info(obj_list)
     for obj in obj_list:
         print(obj.name, obj.status)
+    # conn.buy(Coin("BTC"), 5000000)
+    print(conn.get_balance_info('BTT'))
+    print(conn.get_balance_info('DAWN'))
+    print(conn.upbit.get_order('214e12a5-cd79-411c-9eb2-17e8b9ac6a8e'))
+    # print(conn.upbit.get_balance("KRW-BTC"))
+    # print(conn.get_balance_info("BTC"))
+# {'uuid': '126b7959-11d9-468c-9b1b-f429094c5da8', 'side': 'bid', 'ord_type': 'price', 'price': '5000.0', 'state': 'wait', 'market': 'KRW-BTC', 'created_at': '2021-10-26T23:04:55+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '2.5', 'remaining_fee': '2.5', 'paid_fee': '0.0', 'locked': '5002.5', 'executed_volume': '0.0', 'trades_count': 0, 'trades': []}
+# {'uuid': '214e12a5-cd79-411c-9eb2-17e8b9ac6a8e', 'side': 'bid', 'ord_type': 'price', 'price': '5000.0', 'state': 'cancel', 'market': 'KRW-BTC', 'created_at': '2021-10-26T22:46:00+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '2.5', 'remaining_fee': '0.00037306', 'paid_fee': '2.49962694', 'locked': '0.74649306', 'executed_volume': '0.00006637', 'trades_count': 1, 'trades': [{'market': 'KRW-BTC', 'uuid': 'ee590cc6-65c1-47de-9e70-8d45f2782420', 'price': '75324000.0', 'volume': '0.00006637', 'funds': '4999.25388', 'created_at': '2021-10-26T22:46:00+09:00', 'side': 'bid'}]}

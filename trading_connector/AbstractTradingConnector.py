@@ -6,6 +6,7 @@ class AbstractTradingConnector(metaclass=ABCMeta):
     logger = logging.getLogger("SystemLogger")
 
     def __init__(self):
+        self.cmm_config = None
         self.logger.debug(type(self).__name__)
 
     @abstractmethod
@@ -14,11 +15,14 @@ class AbstractTradingConnector(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def buy(self, name, price_amount):
+    def buy(self, name, price_amount) -> bool:
         """ price_amount원 만큼 시장가 매수
         Args:
             name: 매수할 종목명
             price_amount: 매수할 양(KRW)
+        Returns:
+            false: 매수 실패
+            true: 매수 성공
         """
         pass
 
@@ -29,11 +33,6 @@ class AbstractTradingConnector(metaclass=ABCMeta):
             name: 매도할 종목명
             count_amount: 매도할 개수
         """
-        pass
-
-    @abstractmethod
-    def get_current_price(self, name) -> float:
-        """ name 종목의 현재가를 반환 """
         pass
 
     @abstractmethod
@@ -54,11 +53,6 @@ class AbstractTradingConnector(metaclass=ABCMeta):
     @abstractmethod
     def get_balances(self):
         """ 현재 가지고 있는 모든 종목 조회 """
-        pass
-
-    @abstractmethod
-    def get_avg_buy_price(self, name) -> float:
-        """ 현재 가지고 있는 종목의 평균 매수가 조회 """
         pass
 
     @abstractmethod

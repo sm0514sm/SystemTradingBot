@@ -1,13 +1,14 @@
-from enum import IntEnum, unique
+from enum import IntEnum, unique, auto
 from datetime import datetime
 
 
 @unique
 class CmmStatus(IntEnum):
-    PASS = 0  # 한번 매도 했던 코인은 다음번까지 매수하지 않음
-    WAIT = 1
-    BOUGHT = 2      # 1개라도 산 경우
-    SELL_READY = 3  # 매도 준비 (매도 완료 후 PASS 상태)
+    PASS = auto()  # 한번 매도 했던 코인은 다음번까지 매수하지 않음
+    WAIT = auto()
+    BOUGHT = auto()      # 1개라도 산 경우
+    END_BUY = auto()    # MAX_DCA_BUY_CNT번 매수를 한 경우
+    SELL_READY = auto()  # 매도 준비 (매도 완료 후 PASS 상태)
     WARN = -1  # 유의종목
 
 
@@ -33,18 +34,16 @@ class Coin:
     def __init__(self, coin_name: str, check_time: str = "", **kwargs):
         self.name: str = coin_name
         self.check_time: str = check_time
-        self.balance: float = 0
         self.status: IntEnum = CmmStatus.WAIT
         self.current_price: float = 0
 
         self.variability: float = 0
 
         self.dca_buy_cnt: int = 0  # 분할매수한 개수
-        self.buy_price: float = 0  # 목표 매수 금액
-        self.buy_volume: int = 0  # 구매한 개수
+        self.target_buy_price: float = 0  # 목표 매수 금액
+        self.buy_volume_cnt: int = 0  # 구매한 개수
         self.bought_amount: float = 0  # 구매한 가격 (양)
         self.avg_buy_price: float = 0  # 구매한 코인 평균가격
-        self.buy_time: datetime = datetime(2021, 1, 1)  # 구매한 시점
 
         self.high_price: float = 0
         self.earnings_ratio: float = 0  # 현재 코인 수익률
@@ -58,44 +57,8 @@ class Coin:
         self.cmm_info.max = maximum
 
     def __repr__(self) -> str:
-        return f'Coin({self.name:>6},{self.status.name:>6},{int(self.current_price):>8})'
-    # 매수 개수 확인
-    # def update_balance(self):
-    #     for _ in range(10):
-    #         time.sleep(0.5)
-    #         for account in get_account():
-    #             if account.get('currency') == self.name:
-    #                 self.balance = account.get('balance')
-    #                 self.avg_buy_price = float(account.get('avg_buy_price'))
-    #                 break
-    #         if self.balance:
-    #             break
-    #
-    # def buy_coin(self, price, limit=False, addbuy=False):
-    #     if limit:
-    #         buy_result = buy_stock(f'KRW-{self.name}',
-    #                                price=self.buy_price, volume=price / self.buy_price, ord_type="limit")
-    #         self.status = Status.TRYBUY
-    #     else:
-    #         buy_result = buy_stock(f'KRW-{self.name}', price=price)
-    #         self.status = Status.ADDBUY if addbuy else Status.BOUGHT
-    #     if buy_result.get('error'):
-    #         self.status = Status.PASS
-    #         return ""
-    #     self.buy_time = datetime.now()
-    #     self.uuid = buy_result.get('uuid')
-    #     self.bought_amount = buy_result.get('locked')
-    #     self.update_balance()
-    #     return buy_result
-    #
-    # def sell_coin(self):
-    #     self.update_balance()
-    #     sell_result = sell_stock(f'KRW-{self.name}', self.balance)
-    #     self.status = Status.PASS
-    #     return sell_result.get('uuid')
-    #
-    # def cansel_buy(self):
-    #     pass
+        return f'Coin({self.name:>6},{self.status.name:>10},{int(self.current_price):>8}, ' \
+               f'{round(self.buy_volume_cnt, 2):>10}, {self.avg_buy_price, 1:8.1f})'
 
 
 if __name__ == "__main__":
