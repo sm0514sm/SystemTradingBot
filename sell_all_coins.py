@@ -3,16 +3,7 @@ import jwt
 import requests
 import configparser
 from function.order_stock import sell_stock
-
-config = configparser.ConfigParser()
-config.read('config.ini', encoding='UTF8')
-try:
-    access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
-    secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
-except KeyError:
-    config.read('../config.ini', encoding='UTF8')
-    access_key: str = config['UPBIT']['UPBIT_OPEN_API_ACCESS_KEY']
-    secret_key: str = config['UPBIT']['UPBIT_OPEN_API_SECRET_KEY']
+from trading_connector.CoinTradingConnector import CoinTradingConnector
 
 
 def get_account() -> list:
@@ -31,6 +22,9 @@ def get_account() -> list:
 
 
 if __name__ == "__main__":
+    connector = CoinTradingConnector()
+    access_key = connector.access
+    secret_key = connector.secret
     # 계정 내 모든 코인 팔기
     for account in get_account():
         if account['currency'] in ['KRW']:

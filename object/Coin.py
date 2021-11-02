@@ -57,8 +57,11 @@ class Coin:
         self.cmm_info.max = maximum
 
     def __repr__(self) -> str:
-        return f'Coin({self.name:>6},{self.status.name:>10},{int(self.current_price):>8}, ' \
-               f'{round(self.buy_volume_cnt, 2):>10}, {self.avg_buy_price, 1:8.1f})'
+        return f'Coin({self.name:>6}, ' \
+               f'{self.status.name:>10}, ' \
+               f'{int(self.current_price):>8}, ' \
+               f'{round(self.buy_volume_cnt, 2):>10}, ' \
+               f'{round(self.avg_buy_price, 1):8.1f})'
 
 
 if __name__ == "__main__":

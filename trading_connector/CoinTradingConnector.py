@@ -17,10 +17,10 @@ class CoinTradingConnector(AbstractTradingConnector):
             self.logger.error("coin_config.ini 파일이 유효하지 않아 프로그램을 종료합니다.")
             exit(-1)
         upbit_config = config['UPBIT']
-        access = upbit_config.get("UPBIT_OPEN_API_ACCESS_KEY")
-        secret = upbit_config.get("UPBIT_OPEN_API_SECRET_KEY")
+        self.access = upbit_config.get("UPBIT_OPEN_API_ACCESS_KEY")
+        self.secret = upbit_config.get("UPBIT_OPEN_API_SECRET_KEY")
 
-        self.upbit = pyupbit.Upbit(access, secret)
+        self.upbit = pyupbit.Upbit(self.access, self.secret)
         self.cmm_config = dict(config['CMM'])
 
     @method_logger_decorator

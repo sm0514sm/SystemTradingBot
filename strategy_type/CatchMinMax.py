@@ -1,13 +1,10 @@
 import time
+from datetime import date
 
 from object.Coin import Coin, CmmStatus
 from strategy_type.AbstractStrategy import AbstractStrategy
-from util.MethodLoggerDecorator import MethodLoggerDecorator, method_logger_decorator
-from datetime import datetime, date
-
-
-def calculate_rate(target, base) -> float:
-    return (target - base) / base
+from util.Calculator import calculate_rate
+from util.MethodLoggerDecorator import method_logger_decorator
 
 
 class CatchMinMax(AbstractStrategy):
@@ -19,7 +16,7 @@ class CatchMinMax(AbstractStrategy):
         self.connector.set_min_max(stocks_list)
         self.connector.add_bought_stock_info(stocks_list)
         while True:
-            time.sleep(1)
+            time.sleep(5)
             if last_date != date.today():
                 last_date = date.today()
                 self.logger.info("날짜가 바뀌어 최소값과 최대값을 다시 계산합니다.")
@@ -46,4 +43,4 @@ class CatchMinMax(AbstractStrategy):
                         stock.status = CmmStatus.WAIT
                         stock.avg_sell_price = stock.current_price
                         # TODO 초기화
-            print("-" * 200)
+            self.logger.debug("-" * 100)

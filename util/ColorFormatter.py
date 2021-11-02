@@ -26,6 +26,23 @@ class ColorFormatter(logging.Formatter):
         return formatter.format(record)
 
 
+class FileLoggerFormatter(logging.Formatter):
+    format = '%(asctime)s %(levelname)08s %(message)s'
+
+    FORMATS = {
+        logging.DEBUG: format,
+        logging.INFO: format,
+        logging.WARNING: format,
+        logging.ERROR: format,
+        logging.CRITICAL: format
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt, datefmt='%Y-%m-%d %H:%M:%S')
+        return formatter.format(record)
+
+
 class MethodLoggerFormatter(logging.Formatter):
     grey = "\033[37m"
     white = "\033[97m"

@@ -1,11 +1,12 @@
 import sys
 import logging
+from datetime import date
 
 from strategy_type import StrategyFactory
 from strategy_type.AbstractStrategy import AbstractStrategy
 from trading_connector import TradingConnectorFactory
 from trading_connector.AbstractTradingConnector import AbstractTradingConnector
-from util.ColorFormatter import ColorFormatter, MethodLoggerFormatter
+from util.ColorFormatter import ColorFormatter, MethodLoggerFormatter, FileLoggerFormatter
 
 trading_connector_list = ["coin", "stock"]
 strategy_list = ["FV", "VB", "CM", "CMM"]
@@ -17,6 +18,10 @@ def logger_setting():
     ch.setLevel(logging.DEBUG)
     ch.setFormatter(ColorFormatter())
     logger.addHandler(ch)
+    ch = logging.FileHandler(f'./logs/{date.today()}.log')
+    ch.setFormatter(FileLoggerFormatter())
+    ch.setLevel(logging.DEBUG)
+    logger.addHandler(ch)
 
     method_logger.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
@@ -25,21 +30,21 @@ def logger_setting():
     method_logger.addHandler(ch)
 
 
-def is_valid_strategy(strategy):
-    if strategy in strategy_list:
-        logger.info(f'strategy: "{strategy}"')
+def is_valid_strategy(strategy_name):
+    if strategy_name in strategy_list:
+        logger.info(f'strategy: "{strategy_name}"')
         return True
     else:
-        logger.error(f'잘못된 strategy("{strategy}"). {strategy_list}에서 선택.')
+        logger.error(f'잘못된 strategy("{strategy_name}"). {strategy_list}에서 선택.')
         return False
 
 
-def is_valid_trading(trading):
-    if trading in trading_connector_list:
-        logger.info(f'trading_type: "{trading}"')
+def is_valid_trading(trading_name):
+    if trading_name in trading_connector_list:
+        logger.info(f'trading_type: "{trading_name}"')
         return True
     else:
-        logger.error(f'잘못된 trading_connector("{trading}"). {trading_connector_list}에서 선택.')
+        logger.error(f'잘못된 trading_connector("{trading_name}"). {trading_connector_list}에서 선택.')
         return False
 
 
