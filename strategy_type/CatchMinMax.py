@@ -13,9 +13,11 @@ class CatchMinMax(AbstractStrategy):
         last_date = date.today()
         stocks_name: list[str] = self.connector.get_watching_list()
         stocks_list: list[Coin] = self.connector.make_obj_list(stocks_name)
+        self.connector.apply_pickles(stocks_list, "CMM")
         self.connector.set_min_max(stocks_list)
         self.connector.add_bought_stock_info(stocks_list)
         while True:
+            self.connector.save_pickles(stocks_list, "CMM")
             time.sleep(5)
             if last_date != date.today():
                 last_date = date.today()
@@ -36,11 +38,10 @@ class CatchMinMax(AbstractStrategy):
                             stock.status = CmmStatus.END_BUY
                 elif stock.status in [CmmStatus.BOUGHT, CmmStatus.END_BUY] \
                         and (stock.current_price >= stock.cmm_info.max
-                             or calculate_rate(stock.current_price, stock.avg_buy_price) * 25
+                             or calculate_rate(stock.current_price, stock.avg_buy_price)
                              >= int(self.connector.cmm_config['profit_rate'])):
                     stock.status = CmmStatus.SELL_READY
                     if self.connector.sell(stock, stock.buy_volume_cnt):
                         stock.status = CmmStatus.WAIT
                         stock.avg_sell_price = stock.current_price
-                        # TODO 초기화
             self.logger.debug("-" * 100)

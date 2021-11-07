@@ -1,8 +1,10 @@
+import pickle
 import time
 
 import pyupbit
 from object.Coin import Coin, CmmStatus
 from trading_connector.AbstractTradingConnector import AbstractTradingConnector
+from util.Calculator import calculate_rate
 from util.MethodLoggerDecorator import method_logger_decorator, my_timer
 import configparser
 import sys
@@ -63,13 +65,28 @@ class CoinTradingConnector(AbstractTradingConnector):
             return
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
-        coin.dca_buy_cnt += 1
-        coin.avg_buy_price = self.get_balance_info(coin.name).get('avg_buy_price')
         coin.status = CmmStatus.BOUGHT
+        coin.dca_buy_cnt += 1
+        coin.bought_amount += price_amount
+        coin.avg_buy_price = self.get_balance_info(coin.name).get('avg_buy_price')
+        coin.buy_volume_cnt = self.get_balance_info(coin.name).get('balance')
 
     @method_logger_decorator
     def sell(self, coin: Coin, count_amount):
-        pass
+        order_log = self.upbit.sell_market_order(f"KRW-{coin.name}", count_amount)
+        uuid = order_log.get('uuid')
+        if not uuid:
+            self.logger.warning(order_log)
+            return
+        while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
+            time.sleep(1)
+        self.logger.info(f'매수가: {coin.avg_buy_price}, 매도가: {coin.current_price}, '
+                         f'수익률: {calculate_rate(coin.current_price, coin.avg_buy_price)}')
+        coin.status = CmmStatus.WAIT
+        coin.dca_buy_cnt = 0
+        coin.bought_amount = 0
+        coin.avg_buy_price = 0
+        coin.buy_volume_cnt = 0
 
     @method_logger_decorator
     def set_current_prices(self, coins: list[Coin]):
@@ -80,6 +97,22 @@ class CoinTradingConnector(AbstractTradingConnector):
             current_price = pyupbit.get_current_price(['KRW-' + coin.name for coin in coins])
         for coin in coins:
             coin.current_price = current_price['KRW-' + coin.name]
+
+    @method_logger_decorator
+    def apply_pickles(self, stock_list: list, strategy_name: str) -> None:
+        pickle_name = f"coins_{strategy_name}.pickle"
+        if os.path.isfile(pickle_name):
+            self.logger.info(f"{pickle_name}로부터 데이터 읽어들임")
+            with open(pickle_name, 'rb') as f:
+                stock_list = pickle.load(f)
+        else:
+            self.logger.info(f"{pickle_name}가 없습니다")
+
+    @method_logger_decorator
+    def save_pickles(self, stock_list: list, strategy_name: str):
+        pickle_name = f"coins_{strategy_name}.pickle"
+        with open(pickle_name, 'wb') as f:
+            pickle.dump(stock_list, f, pickle.HIGHEST_PROTOCOL)
 
     @method_logger_decorator
     def set_min_max(self, coins: list[Coin]):
@@ -138,11 +171,15 @@ if __name__ == "__main__":
     conn.add_bought_stock_info(obj_list)
     for obj in obj_list:
         print(obj.name, obj.status)
-    # conn.buy(Coin("BTC"), 5000000)
+    # conn.buy(Coin("XRP"), 5050)
+    conn.sell(Coin("XRP"), 3.44709897)
     print(conn.get_balance_info('BTT'))
     print(conn.get_balance_info('DAWN'))
+    print(conn.get_balance_info('XRP'))
     print(conn.upbit.get_order('214e12a5-cd79-411c-9eb2-17e8b9ac6a8e'))
     # print(conn.upbit.get_balance("KRW-BTC"))
     # print(conn.get_balance_info("BTC"))
 # {'uuid': '126b7959-11d9-468c-9b1b-f429094c5da8', 'side': 'bid', 'ord_type': 'price', 'price': '5000.0', 'state': 'wait', 'market': 'KRW-BTC', 'created_at': '2021-10-26T23:04:55+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '2.5', 'remaining_fee': '2.5', 'paid_fee': '0.0', 'locked': '5002.5', 'executed_volume': '0.0', 'trades_count': 0, 'trades': []}
 # {'uuid': '214e12a5-cd79-411c-9eb2-17e8b9ac6a8e', 'side': 'bid', 'ord_type': 'price', 'price': '5000.0', 'state': 'cancel', 'market': 'KRW-BTC', 'created_at': '2021-10-26T22:46:00+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '2.5', 'remaining_fee': '0.00037306', 'paid_fee': '2.49962694', 'locked': '0.74649306', 'executed_volume': '0.00006637', 'trades_count': 1, 'trades': [{'market': 'KRW-BTC', 'uuid': 'ee590cc6-65c1-47de-9e70-8d45f2782420', 'price': '75324000.0', 'volume': '0.00006637', 'funds': '4999.25388', 'created_at': '2021-10-26T22:46:00+09:00', 'side': 'bid'}]}
+# sell log
+# {'uuid': 'ae428351-7785-45e3-9905-f4dc19feeaf7', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'wait', 'market': 'KRW-XRP', 'created_at': '2021-11-07T23:21:46+09:00', 'volume': '3.44709897', 'remaining_volume': '3.44709897', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '0.0', 'locked': '3.44709897', 'executed_volume': '0.0', 'trades_count': 0}

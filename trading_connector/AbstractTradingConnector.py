@@ -41,6 +41,16 @@ class AbstractTradingConnector(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def apply_pickles(self, stock_list: list, strategy_name: str) -> list:
+        """ pickles로 저장한 데이터를 불러옴 """
+        pass
+
+    @abstractmethod
+    def save_pickles(self, stock_list: list, strategy_name: str) -> None:
+        """ 주식 데이터를 pickles로 저장함 """
+        pass
+
+    @abstractmethod
     def set_min_max(self, names) -> dict:
         """ names 종목들의 기간중 최소최대 가격 조회 """
         pass

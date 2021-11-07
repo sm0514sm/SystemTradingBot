@@ -1,13 +1,15 @@
 from enum import IntEnum, unique, auto
 from datetime import datetime
 
+from util.Calculator import calculate_rate
+
 
 @unique
 class CmmStatus(IntEnum):
     PASS = auto()  # 한번 매도 했던 코인은 다음번까지 매수하지 않음
     WAIT = auto()
-    BOUGHT = auto()      # 1개라도 산 경우
-    END_BUY = auto()    # MAX_DCA_BUY_CNT번 매수를 한 경우
+    BOUGHT = auto()  # 1개라도 산 경우
+    END_BUY = auto()  # MAX_DCA_BUY_CNT번 매수를 한 경우
     SELL_READY = auto()  # 매도 준비 (매도 완료 후 PASS 상태)
     WARN = -1  # 유의종목
 
@@ -59,9 +61,11 @@ class Coin:
     def __repr__(self) -> str:
         return f'Coin({self.name:>6}, ' \
                f'{self.status.name:>10}, ' \
-               f'{int(self.current_price):>8}, ' \
-               f'{round(self.buy_volume_cnt, 2):>10}, ' \
-               f'{round(self.avg_buy_price, 1):8.1f})'
+               f'현재가: {int(self.current_price):>8}, ' \
+               f'목표가: {int(self.target_buy_price):>8}' \
+               f'({round(calculate_rate(self.target_buy_price, self.current_price), 1):>5}), ' \
+               f'volume: {round(self.buy_volume_cnt, 2):>10}, ' \
+               f'avg_price: {round(self.avg_buy_price, 1):8.1f})'
 
 
 if __name__ == "__main__":

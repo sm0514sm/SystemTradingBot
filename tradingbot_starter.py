@@ -1,6 +1,6 @@
-import sys
 import logging
-from datetime import date
+import sys
+from logging import handlers
 
 from strategy_type import StrategyFactory
 from strategy_type.AbstractStrategy import AbstractStrategy
@@ -18,7 +18,9 @@ def logger_setting():
     ch.setLevel(logging.DEBUG)
     ch.setFormatter(ColorFormatter())
     logger.addHandler(ch)
-    ch = logging.FileHandler(f'./logs/{date.today()}.log')
+
+    ch = handlers.TimedRotatingFileHandler("./logs/trading.log", when="midnight", interval=1, encoding="UTF-8")
+    ch.namer = lambda name: name.replace(".log", "") + ".log"
     ch.setFormatter(FileLoggerFormatter())
     ch.setLevel(logging.DEBUG)
     logger.addHandler(ch)
@@ -52,7 +54,7 @@ if __name__ == "__main__":
     logger = logging.getLogger("SystemLogger")
     method_logger = logging.getLogger("MethodLogger")
     logger_setting()
-
+    logger.info("NEW START")
     if len(sys.argv) != 3:
         logger.error("입력 인자 개수가 부족합니다. (사용예시: 'python tradingbot_starter.py coin CMM')")
         exit()
