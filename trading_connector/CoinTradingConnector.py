@@ -88,7 +88,6 @@ class CoinTradingConnector(AbstractTradingConnector):
         coin.avg_buy_price = 0
         coin.buy_volume_cnt = 0
 
-    @method_logger_decorator
     def set_current_prices(self, coins: list[Coin]):
         if len(coins) >= 100:
             current_price = pyupbit.get_current_price(['KRW-' + coin.name for coin in coins[:100]])
