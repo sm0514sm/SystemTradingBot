@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from logging import handlers
 
@@ -19,6 +20,7 @@ def logger_setting():
     ch.setFormatter(ColorFormatter())
     logger.addHandler(ch)
 
+    os.makedirs('./logs', exist_ok=True)
     ch = handlers.TimedRotatingFileHandler("./logs/trading.log", when="midnight", interval=1, encoding="UTF-8")
     ch.namer = lambda name: name.replace(".log", "") + ".log"
     ch.setFormatter(FileLoggerFormatter())

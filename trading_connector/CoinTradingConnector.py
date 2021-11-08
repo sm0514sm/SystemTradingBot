@@ -98,7 +98,6 @@ class CoinTradingConnector(AbstractTradingConnector):
         for coin in coins:
             coin.current_price = current_price['KRW-' + coin.name]
 
-    @method_logger_decorator
     def apply_pickles(self, stock_list: list, strategy_name: str) -> None:
         pickle_name = f"coins_{strategy_name}.pickle"
         if os.path.isfile(pickle_name):
@@ -108,7 +107,6 @@ class CoinTradingConnector(AbstractTradingConnector):
         else:
             self.logger.info(f"{pickle_name}가 없습니다")
 
-    @method_logger_decorator
     def save_pickles(self, stock_list: list, strategy_name: str):
         pickle_name = f"coins_{strategy_name}.pickle"
         with open(pickle_name, 'wb') as f:
