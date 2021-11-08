@@ -11,6 +11,12 @@ import sys
 import os
 
 
+def calculate_avg_sell_price(trades: list) -> float:
+    total_price = sum(map(lambda trade: float(trade.get('price')) * float(trade.get('volume')), trades))
+    total_volume = sum(map(lambda trade: float(trade.get('volume')), trades))
+    return total_price / total_volume
+
+
 class CoinTradingConnector(AbstractTradingConnector):
     def __init__(self):
         super().__init__()
@@ -80,13 +86,15 @@ class CoinTradingConnector(AbstractTradingConnector):
             return
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
-        self.logger.info(f'매수가: {coin.avg_buy_price}, 매도가: {coin.current_price}, '
-                         f'수익률: {calculate_rate(coin.current_price, coin.avg_buy_price)}')
+        coin.avg_sell_price = calculate_avg_sell_price(order_log.get('trades'))
+        self.logger.info(f'매수가: {coin.avg_buy_price}, 매도가: {coin.avg_sell_price}, '
+                         f'수익률: {calculate_rate(coin.avg_sell_price, coin.avg_buy_price)}')
         coin.status = CmmStatus.WAIT
         coin.dca_buy_cnt = 0
         coin.bought_amount = 0
         coin.avg_buy_price = 0
         coin.buy_volume_cnt = 0
+        coin.avg_sell_price = 0
 
     def set_current_prices(self, coins: list[Coin]):
         if len(coins) >= 100:
@@ -173,10 +181,17 @@ if __name__ == "__main__":
     print(conn.get_balance_info('BTT'))
     print(conn.get_balance_info('DAWN'))
     print(conn.get_balance_info('XRP'))
-    print(conn.upbit.get_order('214e12a5-cd79-411c-9eb2-17e8b9ac6a8e'))
+    print(conn.upbit.get_order('ae428351-7785-45e3-9905-f4dc19feeaf7'))
+    calculate_avg_sell_price([{'market': 'KRW-XRP', 'uuid': '58922dba-122d-4252-958f-87f85e94563c', 'price': '1000.0',
+                               'volume': '3', 'funds': '5032.7644962', 'created_at': '2021-11-07T23:21:46+09:00',
+                               'side': 'ask'},
+                              {'market': 'KRW-XRP', 'uuid': '58922dba-122d-4252-958f-87f85e94563c', 'price': '2000.0',
+                               'volume': '1', 'funds': '5032.7644962', 'created_at': '2021-11-07T23:21:46+09:00',
+                               'side': 'ask'}])
     # print(conn.upbit.get_balance("KRW-BTC"))
     # print(conn.get_balance_info("BTC"))
 # {'uuid': '126b7959-11d9-468c-9b1b-f429094c5da8', 'side': 'bid', 'ord_type': 'price', 'price': '5000.0', 'state': 'wait', 'market': 'KRW-BTC', 'created_at': '2021-10-26T23:04:55+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '2.5', 'remaining_fee': '2.5', 'paid_fee': '0.0', 'locked': '5002.5', 'executed_volume': '0.0', 'trades_count': 0, 'trades': []}
 # {'uuid': '214e12a5-cd79-411c-9eb2-17e8b9ac6a8e', 'side': 'bid', 'ord_type': 'price', 'price': '5000.0', 'state': 'cancel', 'market': 'KRW-BTC', 'created_at': '2021-10-26T22:46:00+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '2.5', 'remaining_fee': '0.00037306', 'paid_fee': '2.49962694', 'locked': '0.74649306', 'executed_volume': '0.00006637', 'trades_count': 1, 'trades': [{'market': 'KRW-BTC', 'uuid': 'ee590cc6-65c1-47de-9e70-8d45f2782420', 'price': '75324000.0', 'volume': '0.00006637', 'funds': '4999.25388', 'created_at': '2021-10-26T22:46:00+09:00', 'side': 'bid'}]}
 # sell log
 # {'uuid': 'ae428351-7785-45e3-9905-f4dc19feeaf7', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'wait', 'market': 'KRW-XRP', 'created_at': '2021-11-07T23:21:46+09:00', 'volume': '3.44709897', 'remaining_volume': '3.44709897', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '0.0', 'locked': '3.44709897', 'executed_volume': '0.0', 'trades_count': 0}
+# {'uuid': 'ae428351-7785-45e3-9905-f4dc19feeaf7', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'done', 'market': 'KRW-XRP', 'created_at': '2021-11-07T23:21:46+09:00', 'volume': '3.44709897', 'remaining_volume': '0.0', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '2.5163822481', 'locked': '0.0', 'executed_volume': '3.44709897', 'trades_count': 1, 'trades': [{'market': 'KRW-XRP', 'uuid': '58922dba-122d-4252-958f-87f85e94563c', 'price': '1460.0', 'volume': '3.44709897', 'funds': '5032.7644962', 'created_at': '2021-11-07T23:21:46+09:00', 'side': 'ask'}]}
