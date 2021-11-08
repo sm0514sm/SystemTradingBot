@@ -13,10 +13,12 @@ class CatchMinMax(AbstractStrategy):
         last_date = date.today()
         stocks_name: list[str] = self.connector.get_watching_list()
         stocks_list: list[Coin] = self.connector.make_obj_list(stocks_name)
+        self.logger.info(f'{len(stocks_name)}개의 종목 확인')
         self.connector.apply_pickles(stocks_list, "CMM")
         self.connector.set_min_max(stocks_list)
         self.connector.add_bought_stock_info(stocks_list)
         while True:
+            self.connector.heartbeat()
             self.connector.save_pickles(stocks_list, "CMM")
             time.sleep(5)
             if last_date != date.today():

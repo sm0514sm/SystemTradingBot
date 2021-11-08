@@ -46,6 +46,8 @@ class Coin:
         self.buy_volume_cnt: int = 0  # 구매한 개수
         self.bought_amount: float = 0  # 구매한 가격 (양)
         self.avg_buy_price: float = 0  # 구매한 코인 평균가격
+        self.avg_sell_price: float = 0  # 매도한 코인 평균가격
+        self.sold_amount: float = 0  # 매도한 가격 (양)
 
         self.high_price: float = 0
         self.earnings_ratio: float = 0  # 현재 코인 수익률

@@ -1,3 +1,4 @@
+import datetime
 import pickle
 import time
 
@@ -5,6 +6,7 @@ import pyupbit
 from object.Coin import Coin, CmmStatus
 from trading_connector.AbstractTradingConnector import AbstractTradingConnector
 from util.Calculator import calculate_rate
+from util.DiscordConnector import DiscordConnector
 from util.MethodLoggerDecorator import method_logger_decorator, my_timer
 import configparser
 import sys
@@ -15,6 +17,12 @@ def calculate_avg_sell_price(trades: list) -> float:
     total_price = sum(map(lambda trade: float(trade.get('price')) * float(trade.get('volume')), trades))
     total_volume = sum(map(lambda trade: float(trade.get('volume')), trades))
     return total_price / total_volume
+
+
+def calculate_total_amount(log: dict) -> float:
+    trades = log.get('trades')
+    total_price = sum(map(lambda trade: float(trade.get('price')) * float(trade.get('volume')), trades))
+    return total_price - float(log.get('paid_fee'))
 
 
 class CoinTradingConnector(AbstractTradingConnector):
@@ -28,8 +36,14 @@ class CoinTradingConnector(AbstractTradingConnector):
         self.access = upbit_config.get("UPBIT_OPEN_API_ACCESS_KEY")
         self.secret = upbit_config.get("UPBIT_OPEN_API_SECRET_KEY")
 
+        discord_config = config['DISCORD']
+        self.webhook = discord_config.get("DISCORD_WEBHOOK_URL")
+        self.heartbeat_interval = int(discord_config.get("HEARTBEAT_INTERVAL"))
+
         self.upbit = pyupbit.Upbit(self.access, self.secret)
         self.cmm_config = dict(config['CMM'])
+
+        self.discord_conn = DiscordConnector(self.cmm_config, webhook_url=self.webhook)
 
     @method_logger_decorator
     def check_config(self):
@@ -56,7 +70,30 @@ class CoinTradingConnector(AbstractTradingConnector):
 
     @method_logger_decorator
     def ready_trading(self):
-        pass
+        self.discord_conn.post(self.discord_conn.start_data())
+
+    @method_logger_decorator
+    def heartbeat(self):
+        now_timestamp = datetime.datetime.now().timestamp()
+        now_timestamp = now_timestamp - now_timestamp % (self.heartbeat_interval * 60)
+        print(now_timestamp, self.last_hb_time)
+        if not self.last_hb_time or self.last_hb_time != now_timestamp:
+            self.last_hb_time = now_timestamp
+            self.discord_conn.post(self.discord_conn.heart_data(self.get_total_assets()))
+
+    @method_logger_decorator
+    def get_total_assets(self) -> float:
+        total_assets = 0
+        for balance in self.get_balances():
+            currency = balance.get('currency')
+            if currency == 'KRW':
+                current_price = 1
+            elif currency not in self.get_watching_list():
+                current_price = 0
+            else:
+                current_price = pyupbit.get_current_price(f"KRW-{currency}")
+            total_assets += current_price * float(balance.get('balance'))
+        return total_assets
 
     @method_logger_decorator
     def get_balances(self) -> list:
@@ -74,8 +111,9 @@ class CoinTradingConnector(AbstractTradingConnector):
         coin.status = CmmStatus.BOUGHT
         coin.dca_buy_cnt += 1
         coin.bought_amount += price_amount
-        coin.avg_buy_price = self.get_balance_info(coin.name).get('avg_buy_price')
-        coin.buy_volume_cnt = self.get_balance_info(coin.name).get('balance')
+        coin.avg_buy_price = float(self.get_balance_info(coin.name).get('avg_buy_price'))
+        coin.buy_volume_cnt = float(self.get_balance_info(coin.name).get('balance'))
+        self.discord_conn.post(self.discord_conn.buy_data(coin))
 
     @method_logger_decorator
     def sell(self, coin: Coin, count_amount):
@@ -87,14 +125,17 @@ class CoinTradingConnector(AbstractTradingConnector):
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
         coin.avg_sell_price = calculate_avg_sell_price(order_log.get('trades'))
+        coin.sold_amount = calculate_total_amount(order_log)
         self.logger.info(f'매수가: {coin.avg_buy_price}, 매도가: {coin.avg_sell_price}, '
                          f'수익률: {calculate_rate(coin.avg_sell_price, coin.avg_buy_price)}')
+        self.discord_conn.post(self.discord_conn.sell_data(coin))
         coin.status = CmmStatus.WAIT
         coin.dca_buy_cnt = 0
         coin.bought_amount = 0
         coin.avg_buy_price = 0
         coin.buy_volume_cnt = 0
         coin.avg_sell_price = 0
+        coin.sold_amount = 0
 
     def set_current_prices(self, coins: list[Coin]):
         if len(coins) >= 100:
@@ -144,7 +185,6 @@ class CoinTradingConnector(AbstractTradingConnector):
     @method_logger_decorator
     def get_watching_list(self):
         coin_names = pyupbit.get_tickers(fiat="KRW")
-        self.logger.info(f'{len(coin_names)}개의 코인 확인')
         return [coin_name[4:] for coin_name in coin_names]
 
     @method_logger_decorator
@@ -190,8 +230,39 @@ if __name__ == "__main__":
                                'side': 'ask'}])
     # print(conn.upbit.get_balance("KRW-BTC"))
     # print(conn.get_balance_info("BTC"))
+
+
 # {'uuid': '126b7959-11d9-468c-9b1b-f429094c5da8', 'side': 'bid', 'ord_type': 'price', 'price': '5000.0', 'state': 'wait', 'market': 'KRW-BTC', 'created_at': '2021-10-26T23:04:55+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '2.5', 'remaining_fee': '2.5', 'paid_fee': '0.0', 'locked': '5002.5', 'executed_volume': '0.0', 'trades_count': 0, 'trades': []}
 # {'uuid': '214e12a5-cd79-411c-9eb2-17e8b9ac6a8e', 'side': 'bid', 'ord_type': 'price', 'price': '5000.0', 'state': 'cancel', 'market': 'KRW-BTC', 'created_at': '2021-10-26T22:46:00+09:00', 'volume': None, 'remaining_volume': None, 'reserved_fee': '2.5', 'remaining_fee': '0.00037306', 'paid_fee': '2.49962694', 'locked': '0.74649306', 'executed_volume': '0.00006637', 'trades_count': 1, 'trades': [{'market': 'KRW-BTC', 'uuid': 'ee590cc6-65c1-47de-9e70-8d45f2782420', 'price': '75324000.0', 'volume': '0.00006637', 'funds': '4999.25388', 'created_at': '2021-10-26T22:46:00+09:00', 'side': 'bid'}]}
 # sell log
 # {'uuid': 'ae428351-7785-45e3-9905-f4dc19feeaf7', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'wait', 'market': 'KRW-XRP', 'created_at': '2021-11-07T23:21:46+09:00', 'volume': '3.44709897', 'remaining_volume': '3.44709897', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '0.0', 'locked': '3.44709897', 'executed_volume': '0.0', 'trades_count': 0}
 # {'uuid': 'ae428351-7785-45e3-9905-f4dc19feeaf7', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'done', 'market': 'KRW-XRP', 'created_at': '2021-11-07T23:21:46+09:00', 'volume': '3.44709897', 'remaining_volume': '0.0', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '2.5163822481', 'locked': '0.0', 'executed_volume': '3.44709897', 'trades_count': 1, 'trades': [{'market': 'KRW-XRP', 'uuid': '58922dba-122d-4252-958f-87f85e94563c', 'price': '1460.0', 'volume': '3.44709897', 'funds': '5032.7644962', 'created_at': '2021-11-07T23:21:46+09:00', 'side': 'ask'}]}
+
+def test_get_total_assets():
+    print(CoinTradingConnector().get_total_assets())
+
+
+def test_get_watching_list():
+    print(CoinTradingConnector().get_watching_list())
+
+
+def test_buy():
+    con = CoinTradingConnector()
+    con.buy(Coin("XRP"), 5050)
+
+
+def test_heart_beat():
+    a = CoinTradingConnector()
+    for _ in range(100):
+        a.heartbeat()
+        time.sleep(3)
+
+
+def test_heartbeat():
+    print()
+    a = 1 * 60
+    print(a)
+    for _ in range(100):
+        b = datetime.datetime.now().timestamp()
+        print(datetime.datetime.now(), b - b % a)
+        time.sleep(1)

@@ -7,7 +7,10 @@ class AbstractTradingConnector(metaclass=ABCMeta):
 
     def __init__(self):
         self.cmm_config = None
+        self.discord_conn = None
+        self.heartbeat_interval = None
         self.logger.debug(type(self).__name__)
+        self.last_hb_time = None
 
     @abstractmethod
     def ready_trading(self):
@@ -83,4 +86,8 @@ class AbstractTradingConnector(metaclass=ABCMeta):
     @abstractmethod
     def check_config(self):
         """ 설정 파일 유효성 검사 """
+        pass
+
+    @abstractmethod
+    def heartbeat(self):
         pass
