@@ -124,6 +124,7 @@ class CoinTradingConnector(AbstractTradingConnector):
             return
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
+        self.logger.debug(f"{order_log=}")
         coin.avg_sell_price = calculate_avg_sell_price(order_log.get('trades'))
         coin.sold_amount = calculate_total_amount(order_log)
         self.logger.info(f'매수가: {coin.avg_buy_price}, 매도가: {coin.avg_sell_price}, '
@@ -176,6 +177,8 @@ class CoinTradingConnector(AbstractTradingConnector):
 
     @method_logger_decorator
     def get_balance(self, name: str = "KRW"):
+        if name == "KRW":
+            return self.upbit.get_balance("KRW")
         return self.upbit.get_balance(f"KRW-{name}")
 
     @method_logger_decorator
