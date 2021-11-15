@@ -182,10 +182,14 @@ class CoinTradingConnector(AbstractTradingConnector):
         return self.upbit.get_balance(f"KRW-{name}")
 
     @method_logger_decorator
-    def get_balance(self, coin: Coin):
+    def get_balance(self, coin: Coin | str):
+        if type(coin) == Coin:
+            name = coin.name
+        else:
+            name = coin
         if not coin:
             return self.upbit.get_balance("KRW")
-        return self.upbit.get_balance(f"KRW-{coin.name}")
+        return self.upbit.get_balance(f"KRW-{name}")
 
     @method_logger_decorator
     def get_watching_list(self):
@@ -264,7 +268,6 @@ def test_heart_beat():
 
 
 def test_heartbeat():
-    print()
     a = 1 * 60
     print(a)
     for _ in range(100):
