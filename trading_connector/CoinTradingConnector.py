@@ -183,6 +183,8 @@ class CoinTradingConnector(AbstractTradingConnector):
 
     @method_logger_decorator
     def get_balance(self, coin: Coin):
+        if not coin:
+            return self.upbit.get_balance("KRW")
         return self.upbit.get_balance(f"KRW-{coin.name}")
 
     @method_logger_decorator
