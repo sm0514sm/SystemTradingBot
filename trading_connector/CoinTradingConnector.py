@@ -92,11 +92,12 @@ class CoinTradingConnector(AbstractTradingConnector):
     @method_logger_decorator
     def get_total_assets(self) -> float:
         total_assets = 0
+        watching_list = self.get_watching_list()
         for balance in self.get_balances():
             currency = balance.get('currency')
             if currency == 'KRW':
                 current_price = 1
-            elif currency not in self.get_watching_list():
+            elif currency not in watching_list:
                 current_price = 0
             else:
                 current_price = pyupbit.get_current_price(f"KRW-{currency}")
@@ -234,8 +235,8 @@ class CoinTradingConnector(AbstractTradingConnector):
 
 if __name__ == "__main__":
     conn = CoinTradingConnector()
-    watching_list = conn.get_watching_list()
-    obj_list = conn.make_obj_list(watching_list)
+    watching_list2 = conn.get_watching_list()
+    obj_list = conn.make_obj_list(watching_list2)
     conn.add_bought_stock_info(obj_list)
     for obj in obj_list:
         print(obj.name, obj.status)
