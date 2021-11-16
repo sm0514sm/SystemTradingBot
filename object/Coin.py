@@ -67,7 +67,8 @@ class Coin:
                f'목표가: {int(self.target_buy_price):>8}' \
                f'({round(calculate_rate(self.target_buy_price, self.current_price), 1):>5}), ' \
                f'volume: {round(self.buy_volume_cnt, 2):>10}, ' \
-               f'avg_price: {round(self.avg_buy_price, 1):8.1f})'
+               f'avg_price: {round(self.avg_buy_price, 1):8.1f}), ' \
+               f'분할매수횟수: {self.dca_buy_cnt:2}'
 
 
 if __name__ == "__main__":
