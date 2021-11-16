@@ -30,7 +30,7 @@ class CatchMinMax(AbstractStrategy):
                 self.logger.debug(stock)
                 if stock.target_buy_price == 0:
                     stock.target_buy_price = stock.cmm_info.min
-                if stock.status in [CmmStatus.WAIT, CmmStatus.BOUGHT] and stock.current_price <= stock.target_buy_price\
+                if stock.status in [CmmStatus.WAIT, CmmStatus.BOUGHT] and stock.current_price <= stock.target_buy_price \
                         and self.connector.get_balance("KRW") >= self.connector.cmm_config['buy_amount']:
                     if self.connector.buy(stock, self.connector.cmm_config['buy_amount']):
                         stock.status = CmmStatus.BOUGHT

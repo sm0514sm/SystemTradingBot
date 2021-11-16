@@ -108,12 +108,13 @@ class CoinTradingConnector(AbstractTradingConnector):
         return self.upbit.get_balances()
 
     @method_logger_decorator
-    def buy(self, coin: Coin, price_amount):
+    def buy(self, coin: Coin, price_amount) -> bool:
         order_log = self.upbit.buy_market_order(f"KRW-{coin.name}", price_amount)
+        print(order_log)
         uuid = order_log.get('uuid')
         if not uuid:
             self.logger.warning(order_log)
-            return
+            return False
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
         coin.status = CmmStatus.BOUGHT
@@ -122,14 +123,16 @@ class CoinTradingConnector(AbstractTradingConnector):
         coin.avg_buy_price = float(self.get_balance_info(coin.name).get('avg_buy_price'))
         coin.buy_volume_cnt = float(self.get_balance_info(coin.name).get('balance'))
         self.discord_conn.post(self.discord_conn.buy_data(coin))
+        return True
 
     @method_logger_decorator
-    def sell(self, coin: Coin, count_amount):
+    def sell(self, coin: Coin, count_amount) -> bool:
         order_log = self.upbit.sell_market_order(f"KRW-{coin.name}", count_amount)
+        print(order_log)
         uuid = order_log.get('uuid')
         if not uuid:
             self.logger.warning(order_log)
-            return
+            return False
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
         self.logger.debug(f"{order_log=}")
@@ -145,6 +148,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         coin.buy_volume_cnt = 0
         coin.avg_sell_price = 0
         coin.sold_amount = 0
+        return True
 
     def set_current_prices(self, coins: list[Coin]):
         if len(coins) >= 100:
