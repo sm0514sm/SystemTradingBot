@@ -111,13 +111,14 @@ class CoinTradingConnector(AbstractTradingConnector):
     @method_logger_decorator
     def buy(self, coin: Coin, price_amount) -> bool:
         order_log = self.upbit.buy_market_order(f"KRW-{coin.name}", price_amount)
-        print(order_log)
         uuid = order_log.get('uuid')
         if not uuid:
             self.logger.warning(order_log)
             return False
-        while uuid and self.upbit.get_order(uuid).get('state') != 'done':
+        while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
+        time.sleep(2)
+        self.logger.debug(f"buy {order_log=}")
         coin.status = CmmStatus.BOUGHT
         coin.dca_buy_cnt += 1
         coin.bought_amount += price_amount
@@ -129,14 +130,14 @@ class CoinTradingConnector(AbstractTradingConnector):
     @method_logger_decorator
     def sell(self, coin: Coin, count_amount) -> bool:
         order_log = self.upbit.sell_market_order(f"KRW-{coin.name}", count_amount)
-        print(order_log)
         uuid = order_log.get('uuid')
         if not uuid:
             self.logger.warning(order_log)
             return False
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
-        self.logger.debug(f"{order_log=}")
+        time.sleep(2)
+        self.logger.debug(f"sell {order_log=}")
 
         coin.avg_sell_price = calculate_avg_sell_price(order_log.get('trades'))
         coin.sold_amount = calculate_total_amount(order_log)
