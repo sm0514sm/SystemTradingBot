@@ -115,7 +115,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         if not uuid:
             self.logger.warning(order_log)
             return False
-        while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
+        while uuid and self.upbit.get_order(uuid).get('state') != 'done':
             time.sleep(1)
         coin.status = CmmStatus.BOUGHT
         coin.dca_buy_cnt += 1
@@ -136,6 +136,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
         self.logger.debug(f"{order_log=}")
+
         coin.avg_sell_price = calculate_avg_sell_price(order_log.get('trades'))
         coin.sold_amount = calculate_total_amount(order_log)
         self.logger.info(f'매수가: {coin.avg_buy_price}, 매도가: {coin.avg_sell_price}, '
@@ -174,7 +175,6 @@ class CoinTradingConnector(AbstractTradingConnector):
         with open(pickle_name, 'wb') as f:
             pickle.dump(stock_list, f, pickle.HIGHEST_PROTOCOL)
 
-    @method_logger_decorator
     def set_min_max(self, coins: list[Coin]):
         for coin in coins:
             ohlcv = pyupbit.get_ohlcv("KRW-" + coin.name, interval='day', count=self.cmm_config["count"])
@@ -215,6 +215,7 @@ class CoinTradingConnector(AbstractTradingConnector):
 
     @method_logger_decorator
     def add_bought_stock_info(self, coin_list):
+        # TODO 내 계좌에 없고 pickle에만 남아있는 코인 초기화
         my_stocks_info = self.get_balances()
         for my_stock_info in my_stocks_info:
             if my_stock_info['currency'] == 'KRW':
@@ -239,11 +240,12 @@ if __name__ == "__main__":
     for obj in obj_list:
         print(obj.name, obj.status)
     # conn.buy(Coin("XRP"), 5050)
-    conn.sell(Coin("XRP"), 3.44709897)
+    # conn.sell(Coin("XRP"), 3.44709897)
     print(conn.get_balance_info('BTT'))
     print(conn.get_balance_info('DAWN'))
     print(conn.get_balance_info('XRP'))
     print(conn.upbit.get_order('ae428351-7785-45e3-9905-f4dc19feeaf7'))
+    print(conn.upbit.get_order('40faa4e2-28cd-49ba-8d98-05b220c01965'))
     calculate_avg_sell_price([{'market': 'KRW-XRP', 'uuid': '58922dba-122d-4252-958f-87f85e94563c', 'price': '1000.0',
                                'volume': '3', 'funds': '5032.7644962', 'created_at': '2021-11-07T23:21:46+09:00',
                                'side': 'ask'},
