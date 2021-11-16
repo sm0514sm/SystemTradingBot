@@ -42,7 +42,7 @@ class CoinTradingConnector(AbstractTradingConnector):
 
         self.upbit = pyupbit.Upbit(self.access, self.secret)
         self.cmm_config = dict(config['CMM'])
-        self.cmm_config['interval'] = int(self.cmm_config['interval'])
+        self.cmm_config['interval'] = self.cmm_config['interval']
         self.cmm_config['count'] = int(self.cmm_config['count'])
         self.cmm_config['max_dca_buy_cnt'] = int(self.cmm_config['max_dca_buy_cnt'])
         self.cmm_config['dca_buy_rate'] = int(self.cmm_config['dca_buy_rate'])
