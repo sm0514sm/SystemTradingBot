@@ -187,7 +187,7 @@ class CoinTradingConnector(AbstractTradingConnector):
             name = coin.name
         else:
             name = coin
-        if not coin:
+        if not name or name == "KRW":
             return self.upbit.get_balance("KRW")
         return self.upbit.get_balance(f"KRW-{name}")
 
