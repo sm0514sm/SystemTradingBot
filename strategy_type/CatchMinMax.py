@@ -34,14 +34,14 @@ class CatchMinMax(AbstractStrategy):
                         and self.connector.get_balance("KRW") >= self.connector.cmm_config['buy_amount']:
                     if self.connector.buy(stock, self.connector.cmm_config['buy_amount']):
                         stock.status = CmmStatus.BOUGHT
-                        stock.target_buy_price *= (100 - int(self.connector.cmm_config['dca_buy_rate'])) / 100
+                        stock.target_buy_price *= (100 - self.connector.cmm_config['dca_buy_rate']) / 100
                         stock.avg_buy_price = stock.avg_buy_price
-                        if stock.dca_buy_cnt >= int(self.connector.cmm_config['max_dca_buy_cnt']):
+                        if stock.dca_buy_cnt >= self.connector.cmm_config['max_dca_buy_cnt']:
                             stock.status = CmmStatus.END_BUY
                 elif stock.status in [CmmStatus.BOUGHT, CmmStatus.END_BUY] \
                         and (stock.current_price >= stock.cmm_info.max
                              or calculate_rate(stock.current_price, stock.avg_buy_price)
-                             >= int(self.connector.cmm_config['profit_rate'])):
+                             >= self.connector.cmm_config['profit_rate']):
                     stock.status = CmmStatus.SELL_READY
                     if self.connector.sell(stock, stock.buy_volume_cnt):
                         stock.status = CmmStatus.WAIT

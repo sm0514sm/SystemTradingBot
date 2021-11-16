@@ -42,6 +42,14 @@ class CoinTradingConnector(AbstractTradingConnector):
 
         self.upbit = pyupbit.Upbit(self.access, self.secret)
         self.cmm_config = dict(config['CMM'])
+        self.cmm_config['interval'] = int(self.cmm_config['interval'])
+        self.cmm_config['count'] = int(self.cmm_config['count'])
+        self.cmm_config['max_dca_buy_cnt'] = int(self.cmm_config['max_dca_buy_cnt'])
+        self.cmm_config['dca_buy_rate'] = int(self.cmm_config['dca_buy_rate'])
+        self.cmm_config['value_k'] = float(self.cmm_config['value_k'])
+        self.cmm_config['delay'] = int(self.cmm_config['delay'])
+        self.cmm_config['buy_amount'] = int(self.cmm_config['buy_amount'])
+        self.cmm_config['profit_rate'] = int(self.cmm_config['profit_rate'])
 
         self.discord_conn = DiscordConnector(self.cmm_config, webhook_url=self.webhook)
 
@@ -164,7 +172,7 @@ class CoinTradingConnector(AbstractTradingConnector):
     @method_logger_decorator
     def set_min_max(self, coins: list[Coin]):
         for coin in coins:
-            ohlcv = pyupbit.get_ohlcv("KRW-" + coin.name, interval='day', count=int(self.cmm_config["count"]))
+            ohlcv = pyupbit.get_ohlcv("KRW-" + coin.name, interval='day', count=self.cmm_config["count"])
             coin.set_cmm_info(min(ohlcv['low']), max(ohlcv['high']))
 
     @method_logger_decorator
