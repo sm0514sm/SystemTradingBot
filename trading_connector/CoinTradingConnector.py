@@ -137,6 +137,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
         time.sleep(2)
+        order_log = self.upbit.get_order(uuid)
         self.logger.debug(f"sell {order_log=}")
 
         coin.avg_sell_price = calculate_avg_sell_price(order_log.get('trades'))
@@ -248,6 +249,7 @@ if __name__ == "__main__":
     print(conn.get_balance_info('XRP'))
     print(conn.upbit.get_order('ae428351-7785-45e3-9905-f4dc19feeaf7'))
     print(conn.upbit.get_order('40faa4e2-28cd-49ba-8d98-05b220c01965'))
+    print(conn.upbit.get_order('06e65ae2-a98a-4ae3-a65a-b171f7cb9fba'))
     calculate_avg_sell_price([{'market': 'KRW-XRP', 'uuid': '58922dba-122d-4252-958f-87f85e94563c', 'price': '1000.0',
                                'volume': '3', 'funds': '5032.7644962', 'created_at': '2021-11-07T23:21:46+09:00',
                                'side': 'ask'},
@@ -263,7 +265,8 @@ if __name__ == "__main__":
 # sell log
 # {'uuid': 'ae428351-7785-45e3-9905-f4dc19feeaf7', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'wait', 'market': 'KRW-XRP', 'created_at': '2021-11-07T23:21:46+09:00', 'volume': '3.44709897', 'remaining_volume': '3.44709897', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '0.0', 'locked': '3.44709897', 'executed_volume': '0.0', 'trades_count': 0}
 # {'uuid': 'ae428351-7785-45e3-9905-f4dc19feeaf7', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'done', 'market': 'KRW-XRP', 'created_at': '2021-11-07T23:21:46+09:00', 'volume': '3.44709897', 'remaining_volume': '0.0', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '2.5163822481', 'locked': '0.0', 'executed_volume': '3.44709897', 'trades_count': 1, 'trades': [{'market': 'KRW-XRP', 'uuid': '58922dba-122d-4252-958f-87f85e94563c', 'price': '1460.0', 'volume': '3.44709897', 'funds': '5032.7644962', 'created_at': '2021-11-07T23:21:46+09:00', 'side': 'ask'}]}
-
+# {'uuid': '06e65ae2-a98a-4ae3-a65a-b171f7cb9fba', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'wait', 'market': 'KRW-STRAX', 'created_at': '2021-11-17T22:10:56+09:00', 'volume': '40.55972682', 'remaining_volume': '40.55972682', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '0.0', 'locked': '40.55972682', 'executed_volume': '0.0', 'trades_count': 0}
+# {'uuid': '06e65ae2-a98a-4ae3-a65a-b171f7cb9fba', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'done', 'market': 'KRW-STRAX', 'created_at': '2021-11-17T22:10:56+09:00', 'volume': '40.55972682', 'remaining_volume': '0.0', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '59.0144025231', 'locked': '0.0', 'executed_volume': '40.55972682', 'trades_count': 1, 'trades': [{'market': 'KRW-STRAX', 'uuid': '9179e650-dcdb-47cc-89bd-1eeb6cb384b2', 'price': '2910.0', 'volume': '40.55972682', 'funds': '118028.8050462', 'created_at': '2021-11-17T22:10:56+09:00', 'side': 'ask'}]}
 def test_get_total_assets():
     print(CoinTradingConnector().get_total_assets())
 
