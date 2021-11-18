@@ -63,8 +63,8 @@ class Coin:
     def __repr__(self) -> str:
         return f'Coin({self.name:>6}, ' \
                f'{self.status.name:>10}, ' \
-               f'현재가: {int(self.current_price):>8}, ' \
-               f'목표가: {int(self.target_buy_price):>8}' \
+               f'현재가: {int(self.current_price) if self.current_price > 1 else round(self.current_price):>8}, ' \
+               f'목표가: {int(self.target_buy_price) if self.target_buy_price > 1 else round(self.target_buy_price):>8}' \
                f'({round(calculate_rate(self.target_buy_price, self.current_price), 1):>5}), ' \
                f'volume: {round(self.buy_volume_cnt, 2):>10}, ' \
                f'avg_price: {round(self.avg_buy_price, 1):8.1f}), ' \

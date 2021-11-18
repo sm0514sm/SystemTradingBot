@@ -216,7 +216,6 @@ class CoinTradingConnector(AbstractTradingConnector):
         coin_names = pyupbit.get_tickers(fiat="KRW")
         return [coin_name[4:] for coin_name in coin_names]
 
-    @method_logger_decorator
     def make_obj_list(self, names) -> list:
         return [Coin(name) for name in names]
 
@@ -248,6 +247,8 @@ if __name__ == "__main__":
         print(obj.name, obj.status)
     # conn.buy(Coin("XRP"), 5050)
     # conn.sell(Coin("XRP"), 3.44709897)
+    print(float(conn.get_balance_info("XEC").get('avg_buy_price')))
+    exit()
     print(conn.get_balance_info('BTT'))
     print(conn.get_balance_info('DAWN'))
     print(conn.get_balance_info('XRP'))
