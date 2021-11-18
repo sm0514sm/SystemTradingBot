@@ -20,7 +20,7 @@ class CatchMinMax(AbstractStrategy):
         while True:
             self.connector.heartbeat()
             self.connector.save_pickles(stocks_list, "CMM")
-            time.sleep(5)
+            time.sleep(15)
             if last_date != date.today():
                 last_date = date.today()
                 self.logger.info("날짜가 바뀌어 최소값과 최대값을 다시 계산합니다.")
