@@ -59,6 +59,11 @@ class AbstractTradingConnector(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def set_min_max_one(self, name) -> dict:
+        """ nams 종목의 기간중 최소최대 가격 조회 """
+        pass
+
+    @abstractmethod
     def get_balance(self, name="KRW") -> float:
         """ 현재 가지고 있는 종목 수량 조회 (기본값 KRW) """
         pass

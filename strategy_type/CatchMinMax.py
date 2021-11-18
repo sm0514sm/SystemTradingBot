@@ -46,4 +46,6 @@ class CatchMinMax(AbstractStrategy):
                     if self.connector.sell(stock, stock.buy_volume_cnt):
                         stock.status = CmmStatus.WAIT
                         stock.avg_sell_price = stock.current_price
+                        self.connector.set_min_max_one(stock)
+                        stock.target_buy_price = stock.cmm_info.min
             self.logger.debug("-" * 100)

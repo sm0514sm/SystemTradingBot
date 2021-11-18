@@ -183,6 +183,10 @@ class CoinTradingConnector(AbstractTradingConnector):
             ohlcv = pyupbit.get_ohlcv("KRW-" + coin.name, interval='day', count=self.cmm_config["count"])
             coin.set_cmm_info(min(ohlcv['low']), max(ohlcv['high']))
 
+    def set_min_max_one(self, coin: Coin):
+        ohlcv = pyupbit.get_ohlcv("KRW-" + coin.name, interval='day', count=self.cmm_config["count"])
+        coin.set_cmm_info(min(ohlcv['low']), max(ohlcv['high']))
+
     @method_logger_decorator
     def get_balance_info(self, name: str = "KRW"):
         for balance in self.upbit.get_balances():
