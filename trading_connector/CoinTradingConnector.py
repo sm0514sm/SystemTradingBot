@@ -38,6 +38,7 @@ class CoinTradingConnector(AbstractTradingConnector):
 
         discord_config = config['DISCORD']
         self.webhook = discord_config.get("DISCORD_WEBHOOK_URL")
+        self.heartbeat = discord_config.get("DISCORD_HEARTBEAT_URL")
         self.heartbeat_interval = int(discord_config.get("HEARTBEAT_INTERVAL"))
 
         self.upbit = pyupbit.Upbit(self.access, self.secret)
@@ -51,7 +52,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         self.cmm_config['buy_amount'] = int(self.cmm_config['buy_amount'])
         self.cmm_config['profit_rate'] = int(self.cmm_config['profit_rate'])
 
-        self.discord_conn = DiscordConnector(self.cmm_config, webhook_url=self.webhook)
+        self.discord_conn = DiscordConnector(self.cmm_config, webhook_url=self.webhook, heartbeat_url=self.heartbeat)
 
     @method_logger_decorator
     def check_config(self):
@@ -87,7 +88,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         print(now_timestamp, self.last_hb_time)
         if not self.last_hb_time or self.last_hb_time != now_timestamp:
             self.last_hb_time = now_timestamp
-            self.discord_conn.post(self.discord_conn.heart_data(self.get_total_assets()))
+            self.discord_conn.post_heartbeat(self.discord_conn.heart_data(self.get_total_assets()))
 
     @method_logger_decorator
     def get_total_assets(self) -> float:

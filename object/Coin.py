@@ -12,6 +12,7 @@ class CmmStatus(IntEnum):
     END_BUY = auto()  # MAX_DCA_BUY_CNT번 매수를 한 경우
     SELL_READY = auto()  # 매도 준비 (매도 완료 후 PASS 상태)
     WARN = -1  # 유의종목
+    NEW = -2  # 상장한지 얼마되지 않은 종목
 
 
 class CmmInfo:

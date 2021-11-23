@@ -18,9 +18,19 @@ def get_webhook_url():
         return ""
 
 
+def get_heartbeat_url():
+    try:
+        config = configparser.ConfigParser()
+        config.read(f'{sys.path[0]}/config/coin_config.ini', encoding='UTF8')
+        return config['DISCORD'].get("DISCORD_HEARTBEAT_URL")
+    except KeyError:
+        return ""
+
+
 class DiscordConnector:
-    def __init__(self, cmm_config, webhook_url=get_webhook_url()):
+    def __init__(self, cmm_config, webhook_url=get_webhook_url(), heartbeat_url=get_heartbeat_url()):
         self.webhook_url = webhook_url
+        self.heartbeat_url = heartbeat_url
         self.headers = {"Content-type": "application/json"}
         self.cmm_config = cmm_config
         self.last_total_assets = 0
@@ -28,6 +38,9 @@ class DiscordConnector:
 
     def post(self, data):
         return requests.post(self.webhook_url, headers=self.headers, data=json.dumps(data))
+
+    def post_heartbeat(self, data):
+        return requests.post(self.heartbeat_url, headers=self.headers, data=json.dumps(data))
 
     def start_data(self) -> dict:
         return {
@@ -50,6 +63,7 @@ class DiscordConnector:
         self.now_total_assets = now_total_assets
         if self.last_total_assets == 0:
             self.last_total_assets = self.now_total_assets
+        rate_of_return = calculate_rate(self.now_total_assets, self.last_total_assets)
         data = {
             "content": None,
             "embeds": [
@@ -60,8 +74,9 @@ class DiscordConnector:
                     "fields": [
                         {
                             "name": "**총 자산 변화**",
-                            "value": f"⬆️ {int(self.last_total_assets):,} 원 → {int(self.now_total_assets):,} 원 "
-                                     f"({calculate_rate(self.now_total_assets, self.last_total_assets):.3f} %)"
+                            "value": f"{'⬆️' if rate_of_return >= 0 else '⬇️'} "
+                                     f"{int(self.last_total_assets):,} 원 → {int(self.now_total_assets):,} 원 "
+                                     f"({rate_of_return:.3f} %)"
                         }
                     ]
                 }
@@ -101,6 +116,7 @@ class DiscordConnector:
     def sell_data(coin: Coin):
         avg_buy = int(coin.avg_buy_price) if coin.avg_buy_price > 1 else round(coin.avg_buy_price, 1)
         avg_sell = int(coin.avg_sell_price) if coin.avg_sell_price > 1 else round(coin.avg_sell_price, 1)
+        rate_of_return = calculate_rate(coin.avg_sell_price, coin.avg_buy_price)
         return {
             "content": None,
             "embeds": [
@@ -118,8 +134,9 @@ class DiscordConnector:
                         },
                         {
                             "name": "🔹 **평가손익 (수익률)**",
-                            "value": f"⬆️ {coin.sold_amount - coin.bought_amount:,.0f} 원 "
-                                     f"({calculate_rate(coin.avg_sell_price, coin.avg_buy_price):.2f} %)"
+                            "value": f"{'⬆️' if rate_of_return >= 0 else '⬇️'} "
+                                     f"{coin.sold_amount - coin.bought_amount:,.0f} 원 "
+                                     f"({rate_of_return:.2f} %)"
                         }
                     ]
                 }
