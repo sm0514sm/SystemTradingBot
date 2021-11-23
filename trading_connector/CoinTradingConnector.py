@@ -37,8 +37,8 @@ class CoinTradingConnector(AbstractTradingConnector):
         self.secret = upbit_config.get("UPBIT_OPEN_API_SECRET_KEY")
 
         discord_config = config['DISCORD']
-        self.webhook = discord_config.get("DISCORD_WEBHOOK_URL")
-        self.heartbeat = discord_config.get("DISCORD_HEARTBEAT_URL")
+        self.webhook_url = discord_config.get("DISCORD_WEBHOOK_URL")
+        self.heartbeat_url = discord_config.get("DISCORD_HEARTBEAT_URL")
         self.heartbeat_interval = int(discord_config.get("HEARTBEAT_INTERVAL"))
 
         self.upbit = pyupbit.Upbit(self.access, self.secret)
@@ -52,7 +52,9 @@ class CoinTradingConnector(AbstractTradingConnector):
         self.cmm_config['buy_amount'] = int(self.cmm_config['buy_amount'])
         self.cmm_config['profit_rate'] = int(self.cmm_config['profit_rate'])
 
-        self.discord_conn = DiscordConnector(self.cmm_config, webhook_url=self.webhook, heartbeat_url=self.heartbeat)
+        self.discord_conn = DiscordConnector(self.cmm_config,
+                                             webhook_url=self.webhook_url,
+                                             heartbeat_url=self.heartbeat_url)
 
     @method_logger_decorator
     def check_config(self):
@@ -289,7 +291,7 @@ def test_buy():
 def test_heart_beat():
     a = CoinTradingConnector()
     for _ in range(100):
-        a.heartbeat()
+        a.heartbeat_url()
         time.sleep(3)
 
 
