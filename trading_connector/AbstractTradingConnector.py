@@ -11,6 +11,7 @@ class AbstractTradingConnector(metaclass=ABCMeta):
         self.heartbeat_interval = None
         self.logger.debug(type(self).__name__)
         self.last_hb_time = None
+        self.last_report_time = None
 
     @abstractmethod
     def ready_trading(self):

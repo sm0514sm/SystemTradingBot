@@ -106,6 +106,14 @@ class DiscordConnector:
                         {
                             "name": "🔸 **매수 횟수**",
                             "value": f"{coin.dca_buy_cnt} 번"
+                        },
+                        {
+                            "name": "🔸 **Target Buy Price**",
+                            "value": f"{coin.target_buy_price:,} 원"
+                        },
+                        {
+                            "name": "🔸 **Target Sell Price**",
+                            "value": f"{coin.cmm_info.max:,} 번"
                         }
                     ]
                 }

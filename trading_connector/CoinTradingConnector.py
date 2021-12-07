@@ -87,9 +87,16 @@ class CoinTradingConnector(AbstractTradingConnector):
     def heartbeat(self):
         now_timestamp = datetime.datetime.now().timestamp()
         now_timestamp = now_timestamp - now_timestamp % (self.heartbeat_interval * 60)
-        print(now_timestamp, self.last_hb_time)
         if not self.last_hb_time or self.last_hb_time != now_timestamp:
             self.last_hb_time = now_timestamp
+            self.discord_conn.post_heartbeat(self.discord_conn.heart_data(self.get_total_assets()))
+
+    @method_logger_decorator
+    def daily_report(self):
+        now_timestamp = datetime.datetime.now().timestamp()
+        now_timestamp = now_timestamp - now_timestamp % 86400
+        if not self.last_report_time or self.last_report_time != now_timestamp:
+            self.last_report_time = now_timestamp
             self.discord_conn.post_heartbeat(self.discord_conn.heart_data(self.get_total_assets()))
 
     @method_logger_decorator
