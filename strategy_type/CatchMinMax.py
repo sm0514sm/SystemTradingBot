@@ -20,6 +20,7 @@ class CatchMinMax(AbstractStrategy):
         self.connector.add_bought_stock_info(stocks_list)
         while True:
             self.connector.heartbeat()
+            self.connector.daily_report()
             self.connector.save_pickles(stocks_list, "CMM")
             time.sleep(15)
             if last_date != date.today():

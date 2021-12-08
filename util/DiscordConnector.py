@@ -1,11 +1,13 @@
 import configparser
 import json
-import os
 import sys
+import discord_webhook
 
 import requests
+from discord_webhook import DiscordWebhook, DiscordEmbed
 
 from object import Coin
+from util import SystemValue
 from util.Calculator import calculate_rate
 
 
@@ -27,20 +29,39 @@ def get_heartbeat_url():
         return ""
 
 
+def get_daily_report_url():
+    try:
+        config = configparser.ConfigParser()
+        config.read(f'{sys.path[0]}/config/coin_config.ini', encoding='UTF8')
+        return config['DISCORD'].get("DISCORD_DAILY_REPORT_URL")
+    except KeyError:
+        return ""
+
+
 class DiscordConnector:
-    def __init__(self, cmm_config, webhook_url=get_webhook_url(), heartbeat_url=get_heartbeat_url()):
+    def __init__(self, cmm_config,
+                 webhook_url=get_webhook_url(),
+                 heartbeat_url=get_heartbeat_url(),
+                 daily_report_url=get_daily_report_url()):
         self.webhook_url = webhook_url
         self.heartbeat_url = heartbeat_url
+        self.daily_report_url = daily_report_url
         self.headers = {"Content-type": "application/json"}
         self.cmm_config = cmm_config
         self.last_total_assets = 0
         self.now_total_assets = 0
 
     def post(self, data):
+        self.headers = {"Content-type": "application/json"}
         return requests.post(self.webhook_url, headers=self.headers, data=json.dumps(data))
 
     def post_heartbeat(self, data):
+        self.headers = {"Content-type": "application/json"}
         return requests.post(self.heartbeat_url, headers=self.headers, data=json.dumps(data))
+
+    def post_daily_report(self, data):
+        self.headers = {"Content-type": "multipart/form-data"}
+        return requests.post(self.daily_report_url, headers=self.headers, data=json.dumps(data))
 
     def start_data(self) -> dict:
         return {
@@ -76,7 +97,8 @@ class DiscordConnector:
                             "name": "**총 자산 변화**",
                             "value": f"{'⬆️' if rate_of_return >= 0 else '⬇️'} "
                                      f"{int(self.last_total_assets):,} 원 → {int(self.now_total_assets):,} 원 "
-                                     f"({rate_of_return:.3f} %)"
+                                     f"({int(self.now_total_assets - self.last_total_assets):,} 원 "
+                                     f"{rate_of_return:.3f} %)"
                         }
                     ]
                 }
@@ -151,6 +173,15 @@ class DiscordConnector:
             ]
         }
 
+    def daily_report_data(self, filename: str):
+        webhook = DiscordWebhook(url=self.daily_report_url)
+
+        with open(filename, "rb") as f:
+            webhook.add_file(file=f.read(), filename=filename)
+        webhook.execute()
+
+########################################################################################################################
+
 
 def test_buy_data():
     connector = DiscordConnector(None)
@@ -181,6 +212,12 @@ def test_start_data():
 
 def test_heart_data():
     connector = DiscordConnector(None)
-    connector.post(connector.heart_data(3350863))
-    connector.post(connector.heart_data(4350863))
-    connector.post(connector.heart_data(5350863))
+    connector.post_heartbeat(connector.heart_data(3350863))
+    connector.post_heartbeat(connector.heart_data(4350863))
+    connector.post_heartbeat(connector.heart_data(5350863))
+
+
+def test_daily_report_data():
+    connector = DiscordConnector(None)
+    connector.daily_report_data(f"{SystemValue.root_path()}/daily_report/20211109-20211209.png")
+    # connector.post_daily_report(connector.daily_report_data())

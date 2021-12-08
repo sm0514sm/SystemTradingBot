@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import pickle
 import time
 
@@ -11,6 +11,8 @@ from util.MethodLoggerDecorator import method_logger_decorator, my_timer
 import configparser
 import sys
 import os
+
+from util.Reporter import Reporter
 
 
 def calculate_avg_sell_price(trades: list) -> float:
@@ -55,6 +57,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         self.discord_conn = DiscordConnector(self.cmm_config,
                                              webhook_url=self.webhook_url,
                                              heartbeat_url=self.heartbeat_url)
+        self.reporter = Reporter()
 
     @method_logger_decorator
     def check_config(self):
@@ -85,7 +88,7 @@ class CoinTradingConnector(AbstractTradingConnector):
 
     @method_logger_decorator
     def heartbeat(self):
-        now_timestamp = datetime.datetime.now().timestamp()
+        now_timestamp = datetime.now().timestamp()
         now_timestamp = now_timestamp - now_timestamp % (self.heartbeat_interval * 60)
         if not self.last_hb_time or self.last_hb_time != now_timestamp:
             self.last_hb_time = now_timestamp
@@ -93,11 +96,13 @@ class CoinTradingConnector(AbstractTradingConnector):
 
     @method_logger_decorator
     def daily_report(self):
-        now_timestamp = datetime.datetime.now().timestamp()
-        now_timestamp = now_timestamp - now_timestamp % 86400
+        now_timestamp = datetime.now().timestamp()
+        now_timestamp = now_timestamp - now_timestamp % 180
         if not self.last_report_time or self.last_report_time != now_timestamp:
             self.last_report_time = now_timestamp
-            self.discord_conn.post_heartbeat(self.discord_conn.heart_data(self.get_total_assets()))
+            self.reporter.add_report_data(datetime.today().strftime("%Y%m%d"), int(self.get_total_assets()))
+            filename = self.reporter.make_daily_report()
+            self.discord_conn.post_daily_report(self.discord_conn.daily_report_data(filename))
 
     @method_logger_decorator
     def get_total_assets(self) -> float:

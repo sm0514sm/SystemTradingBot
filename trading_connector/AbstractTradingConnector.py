@@ -97,3 +97,7 @@ class AbstractTradingConnector(metaclass=ABCMeta):
     @abstractmethod
     def heartbeat(self):
         pass
+
+    @abstractmethod
+    def daily_report(self):
+        pass
