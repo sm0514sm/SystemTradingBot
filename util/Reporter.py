@@ -23,6 +23,10 @@ class Reporter:
         return open(f'{root_path()}/{report_txt}', mode, encoding="UTF-8")
 
     def add_report_data(self, date: str, asset: int):
+        daily_log_list = self.read_daily_log_list()
+        dailys = list(map(list, zip(*daily_log_list)))
+        if date in dailys[0]:
+            return
         f = self.get_report_txt_file("a")
         f.write(f'{date},{asset}\n')
         f.close()
