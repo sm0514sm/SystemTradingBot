@@ -234,7 +234,6 @@ class CoinTradingConnector(AbstractTradingConnector):
     def make_obj_list(self, names) -> list:
         return [Coin(name) for name in names]
 
-    @method_logger_decorator
     def add_bought_stock_info(self, coin_list):
         # TODO 내 계좌에 없고 pickle에만 남아있는 코인 초기화
         my_stocks_info = self.get_balances()
