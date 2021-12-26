@@ -98,7 +98,7 @@ class CoinTradingConnector(AbstractTradingConnector):
     @method_logger_decorator
     def daily_report(self):
         now_timestamp = datetime.now().timestamp()
-        now_timestamp = now_timestamp - now_timestamp % 180
+        now_timestamp = now_timestamp - now_timestamp % (60 * 60 * 24)
         if not self.last_report_time or self.last_report_time != now_timestamp:
             self.last_report_time = now_timestamp
             self.reporter.add_report_data(datetime.today().strftime("%Y%m%d"), int(self.get_total_assets()))
