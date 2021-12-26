@@ -8,3 +8,4 @@ venv2/Lib/site-packages/__pycache__
 __pycache__
 venv
 *.pickle
+config/*.ini
