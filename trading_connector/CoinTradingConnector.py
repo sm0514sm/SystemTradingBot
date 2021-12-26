@@ -57,6 +57,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         self.discord_conn = DiscordConnector(self.cmm_config,
                                              webhook_url=self.webhook_url,
                                              heartbeat_url=self.heartbeat_url)
+        self.hold_krw = self.get_balance_info()
         self.reporter = Reporter()
 
     @method_logger_decorator
@@ -140,6 +141,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         coin.avg_buy_price = float(self.get_balance_info(coin.name).get('avg_buy_price'))
         coin.buy_volume_cnt = float(self.get_balance_info(coin.name).get('balance'))
         self.discord_conn.post(self.discord_conn.buy_data(coin))
+        self.hold_krw = self.get_balance_info()
         return True
 
     @method_logger_decorator
@@ -167,6 +169,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         coin.buy_volume_cnt = 0
         coin.avg_sell_price = 0
         coin.sold_amount = 0
+        self.hold_krw = self.get_balance_info()
         return True
 
     def set_current_prices(self, coins: list[Coin]):

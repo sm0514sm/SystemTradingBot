@@ -6,6 +6,7 @@ class AbstractTradingConnector(metaclass=ABCMeta):
     logger = logging.getLogger("SystemLogger")
 
     def __init__(self):
+        self.hold_krw = None
         self.cmm_config = None
         self.discord_conn = None
         self.heartbeat_interval = None

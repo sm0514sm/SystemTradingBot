@@ -26,6 +26,7 @@ class Reporter:
         daily_log_list = self.read_daily_log_list()
         dailys = list(map(list, zip(*daily_log_list)))
         if date in dailys[0]:
+            print("안에 있음")
             return
         f = self.get_report_txt_file("a")
         f.write(f'{date},{asset}\n')
@@ -77,3 +78,9 @@ if __name__ == "__main__":
     # reporter.add_report_data("20211208", 5000000
     for _ in range(5):
         reporter.make_daily_report()
+
+
+def test_add_report_data():
+    reporter = Reporter()
+    reporter.add_report_data("20211226", 165)
+    assert False
