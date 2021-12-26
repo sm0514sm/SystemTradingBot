@@ -7,6 +7,7 @@ from trading_connector.AbstractTradingConnector import AbstractTradingConnector
 class AbstractStrategy(metaclass=ABCMeta):
     connector: AbstractTradingConnector
     logger = logging.getLogger("SystemLogger")
+    coin_logger = logging.getLogger("CoinInfoLogger")
 
     def __init__(self, trading_connector: AbstractTradingConnector):
         self.logger.debug(type(self).__name__)

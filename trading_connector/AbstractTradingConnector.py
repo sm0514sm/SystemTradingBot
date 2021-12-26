@@ -4,6 +4,7 @@ from abc import *
 
 class AbstractTradingConnector(metaclass=ABCMeta):
     logger = logging.getLogger("SystemLogger")
+    # coin_logger = logging.getLogger("CoinInfoLogger")
 
     def __init__(self):
         self.hold_krw = None

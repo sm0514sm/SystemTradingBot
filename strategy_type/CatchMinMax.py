@@ -30,7 +30,7 @@ class CatchMinMax(AbstractStrategy):
                 # TODO 코인 더 작은 값
             self.connector.set_current_prices(stocks_list)
             for stock in stocks_list:
-                self.logger.debug(stock)
+                self.coin_logger.info(stock)
                 if stock.target_buy_price == 0:
                     stock.target_buy_price = stock.cmm_info.min
                 if stock.status in [CmmStatus.WAIT, CmmStatus.BOUGHT] and stock.current_price <= stock.target_buy_price:

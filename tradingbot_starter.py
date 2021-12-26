@@ -7,7 +7,7 @@ from strategy_type import StrategyFactory
 from strategy_type.AbstractStrategy import AbstractStrategy
 from trading_connector import TradingConnectorFactory
 from trading_connector.AbstractTradingConnector import AbstractTradingConnector
-from util.ColorFormatter import ColorFormatter, MethodLoggerFormatter, FileLoggerFormatter
+from util.ColorFormatter import ColorFormatter, MethodLoggerFormatter, FileLoggerFormatter, CoinInfoLoggerFormatter
 
 trading_connector_list = ["coin", "stock"]
 strategy_list = ["FV", "VB", "CM", "CMM"]
@@ -33,6 +33,12 @@ def logger_setting():
     ch.setFormatter(MethodLoggerFormatter())
     method_logger.addHandler(ch)
 
+    coin_info_logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(CoinInfoLoggerFormatter())
+    coin_info_logger.addHandler(ch)
+
 
 def is_valid_strategy(strategy_name):
     if strategy_name in strategy_list:
@@ -55,6 +61,7 @@ def is_valid_trading(trading_name):
 if __name__ == "__main__":
     logger = logging.getLogger("SystemLogger")
     method_logger = logging.getLogger("MethodLogger")
+    coin_info_logger = logging.getLogger("CoinInfoLogger")
     logger_setting()
     logger.info("NEW START")
     if len(sys.argv) != 3:
