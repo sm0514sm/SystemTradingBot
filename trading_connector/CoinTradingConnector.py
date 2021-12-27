@@ -140,7 +140,6 @@ class CoinTradingConnector(AbstractTradingConnector):
         coin.bought_amount += price_amount
         coin.avg_buy_price = float(self.get_balance_info(coin.name).get('avg_buy_price'))
         coin.buy_volume_cnt = float(self.get_balance_info(coin.name).get('balance'))
-        self.discord_conn.post(self.discord_conn.buy_data(coin))
         self.hold_krw = float(self.get_balance_info()['balance'])
         return True
 

@@ -27,7 +27,6 @@ class CatchMinMax(AbstractStrategy):
                 last_date = date.today()
                 self.logger.info("날짜가 바뀌어 최소값과 최대값을 다시 계산합니다.")
                 self.connector.set_min_max(stocks_list)
-                # TODO 코인 더 작은 값
             self.connector.set_current_prices(stocks_list)
             for stock in stocks_list:
                 self.coin_logger.info(stock)
@@ -40,6 +39,7 @@ class CatchMinMax(AbstractStrategy):
                     if self.connector.buy(stock, self.connector.cmm_config['buy_amount']):
                         stock.status = CmmStatus.BOUGHT
                         stock.target_buy_price *= (100 - self.connector.cmm_config['dca_buy_rate']) / 100
+                        self.connector.discord_conn.post(self.connector.discord_conn.buy_data(stock))
                         if stock.dca_buy_cnt >= self.connector.cmm_config['max_dca_buy_cnt']:
                             stock.status = CmmStatus.END_BUY
                 elif stock.status in [CmmStatus.BOUGHT, CmmStatus.END_BUY] \
