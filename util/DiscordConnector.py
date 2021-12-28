@@ -38,6 +38,15 @@ def get_daily_report_url():
         return ""
 
 
+def get_profit_rate() -> int:
+    try:
+        config = configparser.ConfigParser()
+        config.read(f'{sys.path[0]}/config/coin_config.ini', encoding='UTF8')
+        return config['CMM'].getint("PROFIT_RATE")
+    except KeyError:
+        return None
+
+
 class DiscordConnector:
     def __init__(self, cmm_config,
                  webhook_url=get_webhook_url(),
@@ -96,7 +105,7 @@ class DiscordConnector:
                         {
                             "name": "**총 자산 변화**",
                             "value": f"{'⬆️' if rate_of_return >= 0 else '⬇️'} "
-                                     f"{int(self.last_total_assets):,} 원 → {int(self.now_total_assets):,} 원 "
+                                     f"{int(self.last_total_assets):,} 원 → {int(self.now_total_assets):,} 원 \n"
                                      f"({int(self.now_total_assets - self.last_total_assets):,} 원 "
                                      f"{rate_of_return:.3f} %)"
                         }
@@ -109,7 +118,15 @@ class DiscordConnector:
 
     @staticmethod
     def buy_data(coin: Coin) -> dict:
-        avg_buy = int(coin.avg_buy_price) if coin.avg_buy_price > 1 else round(coin.avg_buy_price, 1)
+        avg_buy = int(coin.avg_buy_price) if coin.avg_buy_price > 10 else round(coin.avg_buy_price, 2)
+        target_buy = round(coin.target_buy_price) if coin.target_buy_price > 10 else round(coin.target_buy_price, 2)
+        sell_price = min(coin.cmm_info.max, get_profit_rate())
+        target_sell = round(sell_price) if sell_price > 10 else round(sell_price, 2)
+        current = round(coin.current_price) if coin.current_price > 10 else round(coin.current_price, 2)
+        buy_cnt = round(coin.buy_volume_cnt) if coin.buy_volume_cnt > 100 \
+            else round(coin.buy_volume_cnt, 3) if coin.buy_volume_cnt > 10 \
+            else round(coin.buy_volume_cnt, 4) if coin.buy_volume_cnt > 1 \
+            else round(coin.buy_volume_cnt, 6)
         return {
             "content": None,
             "embeds": [
@@ -119,23 +136,27 @@ class DiscordConnector:
                     "fields": [
                         {
                             "name": "🔸 **매수한 개수**",
-                            "value": f"{coin.buy_volume_cnt} 개"
+                            "value": f"{buy_cnt:,} 개"
                         },
                         {
                             "name": "🔸 **매수 평균가**",
                             "value": f"{avg_buy:,} 원 "
                         },
                         {
+                            "name": "🔸 **현재 매수가**",
+                            "value": f"{current:,} 원"
+                        },
+                        {
                             "name": "🔸 **매수 횟수**",
                             "value": f"{coin.dca_buy_cnt} 번"
                         },
                         {
-                            "name": "🔸 **Target Buy Price**",
-                            "value": f"{coin.target_buy_price:,} 원"
+                            "name": "🔸 **Next Target Buy Price**",
+                            "value": f"{target_buy:,} 원 "
                         },
                         {
-                            "name": "🔸 **Target Sell Price**",
-                            "value": f"{coin.cmm_info.max:,} 번"
+                            "name": "🔸 **Target Sell Price (변할 수 있음)**",
+                            "value": f"{target_sell:,} 번"
                         }
                     ]
                 }
@@ -179,6 +200,7 @@ class DiscordConnector:
         with open(filename, "rb") as f:
             webhook.add_file(file=f.read(), filename=filename)
         webhook.execute()
+
 
 ########################################################################################################################
 
