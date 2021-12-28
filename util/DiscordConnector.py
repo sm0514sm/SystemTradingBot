@@ -93,6 +93,8 @@ class DiscordConnector:
         self.now_total_assets = now_total_assets
         if self.last_total_assets == 0:
             self.last_total_assets = self.now_total_assets
+        assets_dif = int(self.now_total_assets - self.last_total_assets)
+        assets_dif = f'+{assets_dif:,}' if assets_dif > 0 else f'-{assets_dif:,}' if assets_dif < 0 else f'0'
         rate_of_return = calculate_rate(self.now_total_assets, self.last_total_assets)
         data = {
             "content": None,
@@ -105,9 +107,8 @@ class DiscordConnector:
                         {
                             "name": "**총 자산 변화**",
                             "value": f"{'⬆️' if rate_of_return >= 0 else '⬇️'} "
-                                     f"{int(self.last_total_assets):,} 원 → {int(self.now_total_assets):,} 원 \n"
-                                     f"({int(self.now_total_assets - self.last_total_assets):,} 원 "
-                                     f"{rate_of_return:.3f} %)"
+                                     f"{int(self.last_total_assets):,}원 → {int(self.now_total_assets):,}원 \n"
+                                     f"({assets_dif:8}원  {rate_of_return:6.3f}%)"
                         }
                     ]
                 }
