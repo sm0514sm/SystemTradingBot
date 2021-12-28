@@ -101,9 +101,9 @@ class CoinTradingConnector(AbstractTradingConnector):
         now_timestamp = now_timestamp - now_timestamp % (60 * 60 * 24)
         if not self.last_report_time or self.last_report_time != now_timestamp:
             self.last_report_time = now_timestamp
-            self.reporter.add_report_data(datetime.today().strftime("%Y%m%d"), int(self.get_total_assets()))
-            filename = self.reporter.make_daily_report()
-            self.discord_conn.post_daily_report(self.discord_conn.daily_report_data(filename))
+            if self.reporter.add_report_data(datetime.today().strftime("%Y%m%d"), int(self.get_total_assets())):
+                graph_file_name = self.reporter.make_daily_report()
+                self.discord_conn.post_daily_report(self.discord_conn.daily_report_data(graph_file_name))
 
     @method_logger_decorator
     def get_total_assets(self) -> float:

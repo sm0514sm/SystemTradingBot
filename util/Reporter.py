@@ -22,14 +22,19 @@ class Reporter:
             return None
         return open(f'{root_path()}/{report_txt}', mode, encoding="UTF-8")
 
-    def add_report_data(self, date: str, asset: int):
+    def add_report_data(self, date: str, asset: int) -> bool:
+        """ report data를 daily_report.txt 에 append
+        Returns:
+            bool: 데이터를 추가하면 True, 이미 존재하는 날짜라 추가할 수 없으면 False
+        """
         daily_log_list = self.read_daily_log_list()
         dailys = list(map(list, zip(*daily_log_list)))
         if date in dailys[0]:
-            return
+            return False
         f = self.get_report_txt_file("a")
         f.write(f'{date},{asset}\n')
         f.close()
+        return True
 
     def make_daily_report(self) -> str:
         daily_log_list = self.read_daily_log_list()
