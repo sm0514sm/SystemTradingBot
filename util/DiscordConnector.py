@@ -156,8 +156,8 @@ class DiscordConnector:
                             "value": f"{target_buy:,} 원 "
                         },
                         {
-                            "name": "🔸 **Target Sell Price (변할 수 있음)**",
-                            "value": f"{target_sell:,} 번"
+                            "name": "🔸 **Target Sell Price (확정X)**",
+                            "value": f"{target_sell:,} 원"
                         }
                     ]
                 }
