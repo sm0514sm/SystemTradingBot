@@ -94,7 +94,7 @@ class DiscordConnector:
         if self.last_total_assets == 0:
             self.last_total_assets = self.now_total_assets
         assets_dif = int(self.now_total_assets - self.last_total_assets)
-        assets_dif = f'+{assets_dif:,}' if assets_dif > 0 else f'-{assets_dif:,}' if assets_dif < 0 else f'0'
+        assets_dif = f'+{assets_dif:,}' if assets_dif > 0 else f'{assets_dif:,}' if assets_dif < 0 else f'0'
         rate_of_return = calculate_rate(self.now_total_assets, self.last_total_assets)
         data = {
             "content": None,
