@@ -181,8 +181,8 @@ class DiscordConnector:
                             "value": f"{coin.buy_volume_cnt} 개"
                         },
                         {
-                            "name": "🔹 **매수 평균가 -> 매도 평균가**",
-                            "value": f"{avg_buy:,} 원 -> {avg_sell:,} 원"
+                            "name": "🔹 **매수 평균가 → 매도 평균가**",
+                            "value": f"{avg_buy:,} 원 → {avg_sell:,} 원"
                         },
                         {
                             "name": "🔹 **평가손익 (수익률)**",
