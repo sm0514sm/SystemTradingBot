@@ -1,11 +1,8 @@
 import logging
 import os
-import sys
-from datetime import datetime
 
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib import ticker
 
 from util.SystemValue import root_path
 
@@ -85,6 +82,6 @@ if __name__ == "__main__":
 
 
 def test_add_report_data():
-    reporter = Reporter()
-    reporter.add_report_data("20211226", 165)
+    test_reporter = Reporter()
+    test_reporter.add_report_data("20211226", 165)
     assert False

@@ -13,6 +13,8 @@ class CatchMinMax(AbstractStrategy):
         last_date = date.today()
         stocks_name: list[str] = self.connector.get_watching_list()
         stocks_list: list[Coin] = self.connector.make_obj_list(stocks_name)
+        start_amount = self.connector.cmm_config['start_amount']
+        multiple_amount = self.connector.cmm_config['multiple_amount']
         # TODO 생긴지 얼마 안된 코인은 제외
         self.logger.info(f'{len(stocks_name)}개의 종목 확인')
         stocks_list = self.connector.apply_pickles(stocks_list, "CMM")
@@ -33,10 +35,10 @@ class CatchMinMax(AbstractStrategy):
                 if stock.target_buy_price == 0:
                     stock.target_buy_price = stock.cmm_info.min
                 if stock.status in [CmmStatus.WAIT, CmmStatus.BOUGHT] and stock.current_price <= stock.target_buy_price:
-                    if self.connector.hold_krw < self.connector.cmm_config['buy_amount']:
+                    if self.connector.hold_krw < stock.get_next_buy_amount(start_amount, multiple_amount):
                         stock.target_buy_price *= (100 - self.connector.cmm_config['dca_buy_rate']) / 100
                         continue
-                    if self.connector.buy(stock, self.connector.cmm_config['buy_amount']):
+                    if self.connector.buy(stock, stock.get_next_buy_amount(start_amount, multiple_amount)):
                         stock.status = CmmStatus.BOUGHT
                         stock.target_buy_price *= (100 - self.connector.cmm_config['dca_buy_rate']) / 100
                         self.connector.discord_conn.post(self.connector.discord_conn.buy_data(stock))

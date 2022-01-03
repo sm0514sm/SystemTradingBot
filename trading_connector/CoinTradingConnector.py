@@ -51,7 +51,8 @@ class CoinTradingConnector(AbstractTradingConnector):
         self.cmm_config['dca_buy_rate'] = int(self.cmm_config['dca_buy_rate'])
         self.cmm_config['value_k'] = float(self.cmm_config['value_k'])
         self.cmm_config['delay'] = int(self.cmm_config['delay'])
-        self.cmm_config['buy_amount'] = int(self.cmm_config['buy_amount'])
+        self.cmm_config['start_amount'] = int(self.cmm_config['start_amount'])
+        self.cmm_config['multiple_amount'] = int(self.cmm_config['multiple_amount'])
         self.cmm_config['profit_rate'] = int(self.cmm_config['profit_rate'])
 
         self.discord_conn = DiscordConnector(self.cmm_config,
@@ -134,7 +135,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
         time.sleep(2)
-        self.logger.debug(f"buy {order_log=}")
+        self.logger.debug(f"{coin.name} buy {order_log=}")
         coin.status = CmmStatus.BOUGHT
         coin.dca_buy_cnt += 1
         coin.bought_amount += price_amount

@@ -61,6 +61,10 @@ class Coin:
         self.cmm_info.min = minimum
         self.cmm_info.max = maximum
 
+    def get_next_buy_amount(self, start_amount: int | float, multiple_amount: int | float):
+        """ 다음 매수 시도할 금액을 반환 """
+        return start_amount + multiple_amount * self.dca_buy_cnt
+
     def __repr__(self) -> str:
         return f'Coin({self.name:>6}, ' \
                f'{self.status.name:>10}, ' \

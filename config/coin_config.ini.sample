@@ -18,7 +18,7 @@ HEARTBEAT_INTERVAL=60
 # 최대 최소 봉 단위 day/minute1/minute3/minute5/minute10/minute15/minute30/minute60/minute240/week/month
 INTERVAL=day
 # 봉 개수
-COUNT=15
+COUNT=30
 # 분할 매수(DCA: Dollar Cost Average) 최대 개수
 MAX_DCA_BUY_CNT=10
 # 분할 매수 비율 (10 지정시: 100 -> 90 -> 81 -> 72 ...)
@@ -27,7 +27,9 @@ DCA_BUY_RATE=10
 VALUE_K=0.03
 # 현재가 확인 간격: 체크 주기
 DELAY=3
-# 구매할 양 (KRW)
-BUY_AMOUNT=100000
+# 처음 매수할 양 (KRW)
+START_AMOUNT=10000
+# 분할 매수 시 추가할 양 (KRW)
+MULTIPLE_AMOUNT=5000
 # 익절 수익률 (%): 해당 수익률 이상 오르면 매도
-PROFIT_RATE=50
+PROFIT_RATE=30
