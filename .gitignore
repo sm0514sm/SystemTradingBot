@@ -9,3 +9,5 @@ __pycache__
 venv
 *.pickle
 config/*.ini
+daily_report
+daily_report.txt
