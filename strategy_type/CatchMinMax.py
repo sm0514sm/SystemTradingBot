@@ -13,11 +13,12 @@ class CatchMinMax(AbstractStrategy):
         last_date = date.today()
         stocks_name: list[str] = self.connector.get_watching_list()
         stocks_list: list[Coin] = self.connector.make_obj_list(stocks_name)
-        start_amount = self.connector.cmm_config['start_amount']
-        multiple_amount = self.connector.cmm_config['multiple_amount']
+        multiple_amount, start_amount = self.get_amount()
+        stocks_list = self.connector.apply_pickles(stocks_list, "CMM")
+        # stocks_list = list(map(limit_new_stock, map(limit_small_price, stocks_list)))
+
         # TODO 생긴지 얼마 안된 코인은 제외
         self.logger.info(f'{len(stocks_name)}개의 종목 확인')
-        stocks_list = self.connector.apply_pickles(stocks_list, "CMM")
         self.connector.set_min_max(stocks_list)
         self.connector.add_bought_stock_info(stocks_list)
         while True:
@@ -55,3 +56,8 @@ class CatchMinMax(AbstractStrategy):
                         self.connector.set_min_max_one(stock)
                         stock.target_buy_price = stock.cmm_info.min
             self.logger.debug("-" * 100)
+
+    def get_amount(self):
+        start_amount = self.connector.cmm_config['start_amount']
+        multiple_amount = self.connector.cmm_config['multiple_amount']
+        return multiple_amount, start_amount

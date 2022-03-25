@@ -9,10 +9,10 @@ from util.Calculator import calculate_rate
 from util.DiscordConnector import DiscordConnector
 from util.MethodLoggerDecorator import method_logger_decorator, my_timer
 import configparser
-import sys
 import os
 
 from util.Reporter import Reporter
+from util.SystemValue import *
 
 
 def calculate_avg_sell_price(trades: list) -> float:
@@ -64,14 +64,11 @@ class CoinTradingConnector(AbstractTradingConnector):
     @method_logger_decorator
     def check_config(self):
         config = configparser.ConfigParser()
-        if not os.path.isfile(f'{sys.path[1]}/config/coin_config.ini'):
-            if not os.path.isfile(f'config/coin_config.ini'):
-                self.logger.error(f'{sys.path[1]}/config/coin_config.ini 파일이 없습니다.')
-                return None
-            else:
-                config.read(f'config/coin_config.ini', encoding='UTF8')
-        else:
-            config.read(f'{sys.path[1]}/config/coin_config.ini', encoding='UTF8')
+        config_path = f'{root_path()}/config/coin_config.ini'
+        if not os.path.isfile(config_path):
+            self.logger.error(f'{config_path} 파일이 없습니다.')
+            return None
+        config.read(f'{config_path}', encoding='UTF8')
 
         upbit_config = config['UPBIT']
         access = upbit_config.get("UPBIT_OPEN_API_ACCESS_KEY")

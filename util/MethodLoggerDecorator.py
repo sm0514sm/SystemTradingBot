@@ -15,10 +15,11 @@ class MethodLoggerDecorator:
 def method_logger_decorator(func):
     def wrapper(*args, **kwargs):
         try:
-            message = f"{func.__module__.split('.')[1]:>30}.py - {func.__name__:>30} " \
+            message = f"{func.__module__.split('.')[0]:>30}.py - {func.__name__:>30} " \
                       f"{func.__code__.co_firstlineno + 1:>3} | RUN"
             logging.getLogger("MethodLogger").debug(f'{message}, {args[1:]}, {kwargs}')
-        except:
+        except Exception as e:
+            logging.getLogger("MethodLogger").error(f'{e} 발생')
             pass
         return func(*args, **kwargs)
 
