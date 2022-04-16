@@ -18,15 +18,17 @@ class ShortVolatilityBreakout(AbstractStrategy):
             self.connector.heartbeat()
             self.connector.daily_report()
             self.connector.save_pickles(stocks_list, "SVB")
-            # time.sleep(15)
+            time.sleep(5)
             if self.last_date != date.today():
                 self.last_date = date.today()
                 self.logger.info("날짜가 바뀌어 최소값과 최대값을 다시 계산합니다.")
                 self.connector.set_min_max(stocks_list)
-                self.logger.info("날짜가 바뀌어 시가와 목표 구매가를 다시 계산합니다.")
                 self.logger.info("날짜가 바뀌어 전날 거래량을 다시 계산합니다.")
                 self.connector.update_last_infos(stocks_list)
+                self.logger.info("날짜가 바뀌어 시가와 목표 구매가를 다시 계산합니다.")
                 stocks_list = list(map(setup_target_buy_price, stocks_list))
+                self.logger.info("날짜가 바뀌어 모든 종목의 상태를 WAIT으로 합니다.")
+                setup_status_wait(stocks_list)
             self.connector.update_current_infos(stocks_list)
 
             for stock in stocks_list:
@@ -56,12 +58,12 @@ class ShortVolatilityBreakout(AbstractStrategy):
             return
             # TODO: 지정가 구매
         # self.connector.buy_limit(stock, 구매가, 개수)
-        self.connector.buy(stock, 10000)
+        self.connector.buy(stock, 6000)
         setup_target_sell_price(stock)
 
     def do_check_buy_success(self, stock: Coin):
         """매수 예약 걸어놓은 stock이 매수가 성공했는지 확인"""
-        # TODO: 테스트 기간에는 시장가 구입해서 스킵
+        # TODO: 테스트 기간에는 시장가 매수해서 스킵
         pass
 
     def do_try_sell(self, stock: Coin):
@@ -76,7 +78,14 @@ class ShortVolatilityBreakout(AbstractStrategy):
         self.connector.sell(stock, stock.buy_volume_cnt, Status.PASS)
 
     def do_check_sell_success(self, stock: Coin):
+        """매도 예약 걸어놓은 stock이 매도가 성공했는지 확인"""
+        # TODO: 테스트 기간에는 시장가 매도해서 스킵
         pass
+
+
+def setup_status_wait(stocks_list):
+    for stock in stocks_list:
+        stock.status = Status.WAIT
 
 
 def setup_target_buy_price(coin: Coin):
