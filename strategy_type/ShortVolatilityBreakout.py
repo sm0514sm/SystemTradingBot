@@ -32,6 +32,7 @@ class ShortVolatilityBreakout(AbstractStrategy):
             self.connector.update_current_infos(stocks_list)
 
             for stock in stocks_list:
+                self.coin_logger.info(stock)
                 match stock.status:
                     case Status.WAIT:
                         self.do_try_buy(stock)
