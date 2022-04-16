@@ -3,7 +3,7 @@ import pickle
 import time
 
 import pyupbit
-from object.Coin import Coin, CmmStatus
+from object.Coin import Coin, Status
 from trading_connector.AbstractTradingConnector import AbstractTradingConnector
 from util.Calculator import calculate_rate
 from util.DiscordConnector import DiscordConnector
@@ -126,6 +126,7 @@ class CoinTradingConnector(AbstractTradingConnector):
     def buy(self, coin: Coin, price_amount) -> bool:
         order_log = self.upbit.buy_market_order(f"KRW-{coin.name}", price_amount)
         uuid = order_log.get('uuid')
+        coin.buy_uuids.append(uuid)
         if not uuid:
             self.logger.warning(order_log)
             return False
@@ -133,7 +134,7 @@ class CoinTradingConnector(AbstractTradingConnector):
             time.sleep(1)
         time.sleep(2)
         self.logger.debug(f"{coin.name} buy {order_log=}")
-        coin.status = CmmStatus.BOUGHT
+        coin.status = Status.BOUGHT
         coin.dca_buy_cnt += 1
         coin.bought_amount += price_amount
         coin.avg_buy_price = float(self.get_balance_info(coin.name).get('avg_buy_price'))
@@ -142,7 +143,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         return True
 
     @method_logger_decorator
-    def sell(self, coin: Coin, count_amount) -> bool:
+    def sell(self, coin: Coin, count_amount, status=Status.WAIT) -> bool:
         order_log = self.upbit.sell_market_order(f"KRW-{coin.name}", count_amount)
         uuid = order_log.get('uuid')
         if not uuid:
@@ -159,7 +160,7 @@ class CoinTradingConnector(AbstractTradingConnector):
         self.logger.info(f'매수가: {coin.avg_buy_price}, 매도가: {coin.avg_sell_price}, '
                          f'수익률: {calculate_rate(coin.avg_sell_price, coin.avg_buy_price)}')
         self.discord_conn.post(self.discord_conn.sell_data(coin))
-        coin.status = CmmStatus.WAIT
+        coin.status = status
         coin.dca_buy_cnt = 0
         coin.bought_amount = 0
         coin.avg_buy_price = 0
@@ -169,14 +170,23 @@ class CoinTradingConnector(AbstractTradingConnector):
         self.hold_krw = float(self.get_balance_info()['balance'])
         return True
 
-    def set_current_prices(self, coins: list[Coin]):
+    def update_current_infos(self, coins: list[Coin]):
         if len(coins) >= 100:
             current_price = pyupbit.get_current_price(['KRW-' + coin.name for coin in coins[:100]])
             current_price.update(pyupbit.get_current_price(['KRW-' + coin.name for coin in coins[100:]]))
         else:
             current_price = pyupbit.get_current_price(['KRW-' + coin.name for coin in coins])
         for coin in coins:
+            coin.current_volume = pyupbit.get_ohlcv("KRW-" + coin.name, interval='day', count=1).get("volume")[0]
             coin.current_price = current_price['KRW-' + coin.name]
+
+    def update_last_infos(self, coins: list[Coin]):
+        for coin in coins:
+            ohlcv = pyupbit.get_ohlcv("KRW-" + coin.name, interval='day', count=2)
+            coin.last_volume = ohlcv.get("volume")[0]
+            coin.svb_info.max = ohlcv.get("high")[0]
+            coin.svb_info.min = ohlcv.get("low")[0]
+            coin.open_price = ohlcv.get("open")[1]
 
     def apply_pickles(self, stock_list: list, strategy_name: str) -> list:
         pickle_name = f"coins_{strategy_name}.pickle"
@@ -242,7 +252,7 @@ class CoinTradingConnector(AbstractTradingConnector):
                 continue
             for coin in coin_list:
                 if coin.name == my_stock_info['currency']:
-                    coin.status = CmmStatus.BOUGHT
+                    coin.status = Status.BOUGHT
                     coin.avg_buy_price = float(my_stock_info['avg_buy_price'])
                     coin.buy_volume_cnt = float(my_stock_info['balance'])
                     if coin.dca_buy_cnt == 0:
@@ -319,3 +329,22 @@ def test_get_balance_info():
     a = CoinTradingConnector()
     print(a.get_balance_info()['balance'])
     print(type(a.get_balance_info()['balance']))
+
+
+def test_get_ohlcv():
+    a = CoinTradingConnector()
+    print()
+    b = pyupbit.get_ohlcv("KRW-BTC", interval='day', count=2)
+    print(b)
+    print(b.get("volume")[0])
+    print(b.get("high")[0])
+    print(b.get("low")[0])
+    print(b.get("open")[1]) # 금일 시가
+    print()
+
+
+def test_update_current_infos():
+    a = CoinTradingConnector()
+    print()
+
+    assert False

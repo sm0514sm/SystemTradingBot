@@ -23,27 +23,34 @@ class AbstractTradingConnector(metaclass=ABCMeta):
     @abstractmethod
     def buy(self, name, price_amount) -> bool:
         """ price_amount원 만큼 시장가 매수
+
         Args:
             name: 매수할 종목명
             price_amount: 매수할 양(KRW)
         Returns:
-            false: 매수 실패
-            true: 매수 성공
+            True 매수 성공, False 매수 실패
         """
         pass
 
     @abstractmethod
-    def sell(self, name, count_amount):
+    def sell(self, name, count_amount, status):
         """ name 종목 모두 시장가 매도
+
         Args:
             name: 매도할 종목명
             count_amount: 매도할 개수
+            status:
         """
         pass
 
     @abstractmethod
-    def set_current_prices(self, names) -> None:
-        """ name 종목들의 현재가를 세팅 """
+    def update_current_infos(self, stocks) -> None:
+        """ stocks의 현재가, 거래량 세팅 """
+        pass
+
+    @abstractmethod
+    def update_last_infos(self, stocks) -> None:
+        """ stocks의 전일 거래량 세팅"""
         pass
 
     @abstractmethod

@@ -10,7 +10,7 @@ from trading_connector.AbstractTradingConnector import AbstractTradingConnector
 from util.ColorFormatter import ColorFormatter, MethodLoggerFormatter, FileLoggerFormatter, CoinInfoLoggerFormatter
 
 trading_connector_list = ["coin", "stock"]
-strategy_list = ["FV", "VB", "CM", "CMM"]
+strategy_list = ["SVB", "CMM"]
 
 
 def logger_setting():

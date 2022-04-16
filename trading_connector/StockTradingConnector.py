@@ -12,7 +12,7 @@ class StockTradingConnector(AbstractTradingConnector):
         pass
 
     @MethodLoggerDecorator
-    def sell(self, name, count_amount):
+    def sell(self, name, count_amount, status):
         pass
 
     @MethodLoggerDecorator
