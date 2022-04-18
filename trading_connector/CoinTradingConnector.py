@@ -94,14 +94,30 @@ class CoinTradingConnector(AbstractTradingConnector):
             self.discord_conn.post_heartbeat(self.discord_conn.heart_data(self.get_total_assets()))
 
     @method_logger_decorator
-    def daily_report(self):
+    def daily_at_9(self, stocks_list):
         now_timestamp = datetime.now().timestamp()
         now_timestamp = now_timestamp - now_timestamp % (60 * 60 * 24)
         if not self.last_report_time or self.last_report_time != now_timestamp:
             self.last_report_time = now_timestamp
-            if self.reporter.add_report_data(datetime.today().strftime("%Y%m%d"), int(self.get_total_assets())):
-                graph_file_name = self.reporter.make_daily_report()
-                self.discord_conn.post_daily_report(self.discord_conn.daily_report_data(graph_file_name))
+            # DO
+            self.logger.info("Daily Routine")
+            self.daily_report()
+            self.logger.info("1. 최소값과 최대값을 다시 계산합니다.")
+            self.set_min_max(stocks_list)
+            self.logger.info("2. 전날 거래량을 다시 계산합니다.")
+            self.update_last_infos(stocks_list)
+            self.logger.info("3. 시가와 목표 구매가를 다시 계산합니다.")
+            stocks_list = list(map(setup_target_buy_price, stocks_list))
+            self.logger.info("4. 현재 보유한 종목을 시장가에 팝니다.")
+            self.sell_all(stocks_list)
+            self.logger.info("5. 모든 종목의 상태를 WAIT으로 합니다.")
+            setup_status_wait(stocks_list)
+
+    @method_logger_decorator
+    def daily_report(self):
+        if self.reporter.add_report_data(datetime.today().strftime("%Y%m%d"), int(self.get_total_assets())):
+            graph_file_name = self.reporter.make_daily_report()
+            self.discord_conn.post_daily_report(self.discord_conn.daily_report_data(graph_file_name))
 
     @method_logger_decorator
     def get_total_assets(self) -> float:
@@ -261,6 +277,23 @@ class CoinTradingConnector(AbstractTradingConnector):
             else:
                 self.logger.warning(f"{my_stock_info['currency']}을 coin_list에서 찾을 수 없습니다.")
 
+    def sell_all(self, stocks_list):
+        for stock in stocks_list:
+            if stock.status == Status.BOUGHT:
+                self.sell(stock, self.get_balance(stock.name))
+
+
+def setup_status_wait(stocks_list: list[Coin]):
+    for stock in stocks_list:
+        stock.status = Status.WAIT
+
+
+def setup_target_buy_price(coin: Coin):
+    coin.target_buy_price = coin.open_price + (coin.svb_info.max - coin.svb_info.min) / 2
+    if calculate_rate(coin.target_buy_price, coin.open_price) <= 1.5:
+        coin.target_buy_price = coin.open_price * 1.015
+    return coin
+
 
 if __name__ == "__main__":
     conn = CoinTradingConnector()
@@ -296,6 +329,14 @@ if __name__ == "__main__":
 # {'uuid': 'ae428351-7785-45e3-9905-f4dc19feeaf7', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'done', 'market': 'KRW-XRP', 'created_at': '2021-11-07T23:21:46+09:00', 'volume': '3.44709897', 'remaining_volume': '0.0', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '2.5163822481', 'locked': '0.0', 'executed_volume': '3.44709897', 'trades_count': 1, 'trades': [{'market': 'KRW-XRP', 'uuid': '58922dba-122d-4252-958f-87f85e94563c', 'price': '1460.0', 'volume': '3.44709897', 'funds': '5032.7644962', 'created_at': '2021-11-07T23:21:46+09:00', 'side': 'ask'}]}
 # {'uuid': '06e65ae2-a98a-4ae3-a65a-b171f7cb9fba', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'wait', 'market': 'KRW-STRAX', 'created_at': '2021-11-17T22:10:56+09:00', 'volume': '40.55972682', 'remaining_volume': '40.55972682', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '0.0', 'locked': '40.55972682', 'executed_volume': '0.0', 'trades_count': 0}
 # {'uuid': '06e65ae2-a98a-4ae3-a65a-b171f7cb9fba', 'side': 'ask', 'ord_type': 'market', 'price': None, 'state': 'done', 'market': 'KRW-STRAX', 'created_at': '2021-11-17T22:10:56+09:00', 'volume': '40.55972682', 'remaining_volume': '0.0', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '59.0144025231', 'locked': '0.0', 'executed_volume': '40.55972682', 'trades_count': 1, 'trades': [{'market': 'KRW-STRAX', 'uuid': '9179e650-dcdb-47cc-89bd-1eeb6cb384b2', 'price': '2910.0', 'volume': '40.55972682', 'funds': '118028.8050462', 'created_at': '2021-11-17T22:10:56+09:00', 'side': 'ask'}]}
+def test_daily_at_9():
+    a = CoinTradingConnector()
+    stocks_name = a.get_watching_list()
+    stocks_list = a.make_obj_list(stocks_name)
+    print()
+    a.daily_at_9(stocks_list)
+
+
 def test_get_total_assets():
     print(CoinTradingConnector().get_total_assets())
 
@@ -325,6 +366,13 @@ def test_heartbeat():
         time.sleep(1)
 
 
+def test_get_balance():
+    a = CoinTradingConnector()
+    print()
+    print(a.get_balance("APENFT"))
+    print(type(a.get_balance("APENFT")))
+
+
 def test_get_balance_info():
     a = CoinTradingConnector()
     print(a.get_balance_info()['balance'])
@@ -339,7 +387,7 @@ def test_get_ohlcv():
     print(b.get("volume")[0])
     print(b.get("high")[0])
     print(b.get("low")[0])
-    print(b.get("open")[1]) # 금일 시가
+    print(b.get("open")[1])  # 금일 시가
     print()
 
 

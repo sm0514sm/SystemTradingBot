@@ -110,3 +110,7 @@ class AbstractTradingConnector(metaclass=ABCMeta):
     @abstractmethod
     def daily_report(self):
         pass
+
+    @abstractmethod
+    def daily_at_9(self, stocks_list):
+        pass

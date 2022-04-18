@@ -16,19 +16,9 @@ class ShortVolatilityBreakout(AbstractStrategy):
 
         while True:
             self.connector.heartbeat()
-            self.connector.daily_report()
+            self.connector.daily_at_9(stocks_list)
             self.connector.save_pickles(stocks_list, "SVB")
             time.sleep(5)
-            if self.last_date != date.today():
-                self.last_date = date.today()
-                self.logger.info("날짜가 바뀌어 최소값과 최대값을 다시 계산합니다.")
-                self.connector.set_min_max(stocks_list)
-                self.logger.info("날짜가 바뀌어 전날 거래량을 다시 계산합니다.")
-                self.connector.update_last_infos(stocks_list)
-                self.logger.info("날짜가 바뀌어 시가와 목표 구매가를 다시 계산합니다.")
-                stocks_list = list(map(setup_target_buy_price, stocks_list))
-                self.logger.info("날짜가 바뀌어 모든 종목의 상태를 WAIT으로 합니다.")
-                setup_status_wait(stocks_list)
             self.connector.update_current_infos(stocks_list)
 
             for stock in stocks_list:
@@ -83,18 +73,6 @@ class ShortVolatilityBreakout(AbstractStrategy):
         """매도 예약 걸어놓은 stock이 매도가 성공했는지 확인"""
         # TODO: 테스트 기간에는 시장가 매도해서 스킵
         pass
-
-
-def setup_status_wait(stocks_list):
-    for stock in stocks_list:
-        stock.status = Status.WAIT
-
-
-def setup_target_buy_price(coin: Coin):
-    coin.target_buy_price = coin.open_price + (coin.svb_info.max - coin.svb_info.min) / 2
-    if calculate_rate(coin.target_buy_price, coin.open_price) <= 1.5:
-        coin.target_buy_price = coin.open_price * 1.015
-    return coin
 
 
 def setup_target_sell_price(coin: Coin):
