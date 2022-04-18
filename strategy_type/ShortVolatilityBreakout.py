@@ -56,6 +56,7 @@ class ShortVolatilityBreakout(AbstractStrategy):
         if stock.current_price < stock.target_buy_price:
             return
         if stock.current_volume < stock.last_volume:
+            stock.status = Status.PASS
             return
             # TODO: 지정가 구매
         # self.connector.buy_limit(stock, 구매가, 개수)
