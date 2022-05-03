@@ -76,6 +76,6 @@ class ShortVolatilityBreakout(AbstractStrategy):
 
 
 def setup_target_sell_price(coin: Coin):
-    coin.target_profit_cut_sell_price = coin.avg_buy_price * (1 + 0.01)
-    coin.target_loss_cut_sell_price = coin.avg_buy_price * (1 - 0.01)
+    coin.target_profit_cut_sell_price = coin.avg_buy_price * (1 + 0.02)
+    coin.target_loss_cut_sell_price = coin.avg_buy_price * (1 - 0.02)
     return coin
