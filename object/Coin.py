@@ -54,8 +54,8 @@ class Coin:
         self.current_volume: float = 0  # 현재 거래량
         self.last_volume: float = 0  # 전일 거래량
 
-        self.buy_uuids: list[str] = []
-        self.sell_uuids: list[str] = []
+        self.buy_uuid: str = ""
+        self.sell_uuid: str = ""
 
         self.variability: float = 0
 

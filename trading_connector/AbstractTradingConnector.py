@@ -4,11 +4,13 @@ from abc import *
 
 class AbstractTradingConnector(metaclass=ABCMeta):
     logger = logging.getLogger("SystemLogger")
+
     # coin_logger = logging.getLogger("CoinInfoLogger")
 
     def __init__(self):
         self.hold_krw = None
         self.cmm_config = None
+        self.svb_config = None
         self.discord_conn = None
         self.heartbeat_interval = None
         self.logger.debug(type(self).__name__)
@@ -30,6 +32,25 @@ class AbstractTradingConnector(metaclass=ABCMeta):
         Returns:
             True 매수 성공, False 매수 실패
         """
+        pass
+
+    @abstractmethod
+    def buy_limit_order(self, coin, price, amount) -> bool:
+        """ price 가격에 amount 개수 매수 시도
+
+        Args:
+            coin: 매수할 종목
+            price: 매수할 가격
+            amount: 매수할 개수
+
+        Returns:
+            True 매수 시도 성공, False 매수 시도 실패
+
+        """
+        pass
+
+    @abstractmethod
+    def get_balance_info(self, name: str = "KRW"):
         pass
 
     @abstractmethod
@@ -113,4 +134,12 @@ class AbstractTradingConnector(metaclass=ABCMeta):
 
     @abstractmethod
     def daily_at_9(self, stocks_list):
+        pass
+
+    @abstractmethod
+    def get_order(self, buy_uuid):
+        pass
+
+    @abstractmethod
+    def cancel_order(self, buy_uuid):
         pass

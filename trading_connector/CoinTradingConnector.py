@@ -1,16 +1,15 @@
-from datetime import datetime
+import configparser
+import os
 import pickle
 import time
+from datetime import datetime
 
 import pyupbit
 from object.Coin import Coin, Status
 from trading_connector.AbstractTradingConnector import AbstractTradingConnector
 from util.Calculator import calculate_rate
 from util.DiscordConnector import DiscordConnector
-from util.MethodLoggerDecorator import method_logger_decorator, my_timer
-import configparser
-import os
-
+from util.MethodLoggerDecorator import method_logger_decorator
 from util.Reporter import Reporter
 from util.SystemValue import *
 
@@ -54,6 +53,10 @@ class CoinTradingConnector(AbstractTradingConnector):
         self.cmm_config['start_amount'] = int(self.cmm_config['start_amount'])
         self.cmm_config['multiple_amount'] = int(self.cmm_config['multiple_amount'])
         self.cmm_config['profit_rate'] = int(self.cmm_config['profit_rate'])
+
+        self.svb_config = dict(config['SVB'])
+        self.svb_config['profit_rate'] = int(self.svb_config['profit_rate'])
+        self.svb_config['buy_amount'] = int(self.svb_config['buy_amount'])
 
         self.discord_conn = DiscordConnector(self.cmm_config,
                                              webhook_url=self.webhook_url,
@@ -139,16 +142,23 @@ class CoinTradingConnector(AbstractTradingConnector):
         return self.upbit.get_balances()
 
     @method_logger_decorator
+    def get_order(self, buy_uuid):
+        return self.upbit.get_order(buy_uuid)
+
+    @method_logger_decorator
+    def cancel_order(self, buy_uuid):
+        return self.upbit.cancel_order(buy_uuid)
+
+    @method_logger_decorator
     def buy(self, coin: Coin, price_amount) -> bool:
         order_log = self.upbit.buy_market_order(f"KRW-{coin.name}", price_amount)
         uuid = order_log.get('uuid')
-        coin.buy_uuids.append(uuid)
+        coin.buy_uuid = uuid
         if not uuid:
             self.logger.warning(order_log)
             return False
         while uuid and self.upbit.get_order(uuid).get('state') == 'wait':
             time.sleep(1)
-        time.sleep(2)
         self.logger.debug(f"{coin.name} buy {order_log=}")
         coin.status = Status.BOUGHT
         coin.dca_buy_cnt += 1
@@ -156,6 +166,17 @@ class CoinTradingConnector(AbstractTradingConnector):
         coin.avg_buy_price = float(self.get_balance_info(coin.name).get('avg_buy_price'))
         coin.buy_volume_cnt = float(self.get_balance_info(coin.name).get('balance'))
         self.hold_krw = float(self.get_balance_info()['balance'])
+        return True
+
+    @method_logger_decorator
+    def buy_limit_order(self, coin: Coin, price, amount) -> bool:
+        order_log = self.upbit.buy_limit_order(f"KRW-{coin.name}", price, amount)
+        uuid = order_log.get('uuid')
+        coin.buy_uuid = uuid
+        if not uuid:
+            self.logger.warning(order_log)
+            return False
+        coin.status = Status.TRY_BUY
         return True
 
     @method_logger_decorator
@@ -297,15 +318,23 @@ def setup_target_buy_price(coin: Coin):
 
 if __name__ == "__main__":
     conn = CoinTradingConnector()
+    order = conn.get_order("ae428351-7785-45e3-9905-f4dc19feeaf7")
+    print(type(order.get('created_at')))
+    print((order.get('created_at')))
+    print(datetime.strptime(order.get('created_at')[:-6], "%Y-%m-%dT%H:%M:%S"))
+    a = datetime.now()
+    time.sleep(5)
+    print(datetime.now() - a)
+    exit()
     watching_list2 = conn.get_watching_list()
     obj_list = conn.make_obj_list(watching_list2)
     conn.add_bought_stock_info(obj_list)
-    for obj in obj_list:
-        print(obj.name, obj.status)
+    # for obj in obj_list:
+    #     print(obj.name, obj.status)
     # conn.buy(Coin("XRP"), 5050)
     # conn.sell(Coin("XRP"), 3.44709897)
-    print(float(conn.get_balance_info("XEC").get('avg_buy_price')))
-    exit()
+    # print(float(conn.get_balance_info("XEC").get('avg_buy_price')))
+    # exit()
     print(conn.get_balance_info('BTT'))
     print(conn.get_balance_info('DAWN'))
     print(conn.get_balance_info('XRP'))
@@ -395,4 +424,8 @@ def test_update_current_infos():
     a = CoinTradingConnector()
     print()
 
+    assert False
+
+
+def test_buy_limit_order():
     assert False

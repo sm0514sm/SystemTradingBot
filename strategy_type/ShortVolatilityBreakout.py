@@ -1,10 +1,9 @@
 import time
-from datetime import date
 
 from object.Coin import Status, Coin
 from strategy_type.AbstractStrategy import AbstractStrategy
-from util.Calculator import calculate_rate
 from util.MethodLoggerDecorator import method_logger_decorator
+from datetime import datetime
 
 
 class ShortVolatilityBreakout(AbstractStrategy):
@@ -45,18 +44,28 @@ class ShortVolatilityBreakout(AbstractStrategy):
         """
         if stock.current_price < stock.target_buy_price:
             return
-        if stock.current_volume < stock.last_volume:
+        if stock.current_volume < stock.last_volume / 2:
             stock.status = Status.PASS
             return
-            # TODO: 지정가 구매
-        # self.connector.buy_limit(stock, 구매가, 개수)
-        self.connector.buy(stock, 6000)
-        setup_target_sell_price(stock)
+        self.connector.buy_limit_order(stock,
+                                       stock.current_price,
+                                       self.connector.svb_config['buy_amount'] / stock.current_price)
 
     def do_check_buy_success(self, stock: Coin):
         """매수 예약 걸어놓은 stock이 매수가 성공했는지 확인"""
-        # TODO: 테스트 기간에는 시장가 매수해서 스킵
-        pass
+        order = self.connector.get_order(stock.buy_uuid)
+        if order.get('state') == 'wait':
+            created_at: datetime = datetime.strptime(order.get('created_at')[:-6], "%Y-%m-%dT%H:%M:%S")
+            if (datetime.now() - created_at).seconds >= 3 * 60:
+                stock.status = Status.PASS
+                self.connector.cancel_order(stock.buy_uuid)
+            return
+        stock.status = Status.BOUGHT
+        stock.bought_amount += float(order.get('price')) * float(order.get('volume'))
+        stock.avg_buy_price = float(self.connector.get_balance_info(stock.name).get('avg_buy_price'))
+        stock.buy_volume_cnt = float(self.connector.get_balance_info(stock.name).get('balance'))
+        self.connector.hold_krw = float(self.connector.get_balance_info()['balance'])
+        self.setup_target_sell_price(stock)
 
     def do_try_sell(self, stock: Coin):
         """매도 조건에 맞는 stock에 대해 매도 시도
@@ -74,8 +83,7 @@ class ShortVolatilityBreakout(AbstractStrategy):
         # TODO: 테스트 기간에는 시장가 매도해서 스킵
         pass
 
-
-def setup_target_sell_price(coin: Coin):
-    coin.target_profit_cut_sell_price = coin.avg_buy_price * (1 + 0.02)
-    coin.target_loss_cut_sell_price = coin.avg_buy_price * (1 - 0.02)
-    return coin
+    def setup_target_sell_price(self, coin: Coin):
+        coin.target_profit_cut_sell_price = coin.avg_buy_price * (1 + self.connector.svb_config['profit_rate'] / 100)
+        coin.target_loss_cut_sell_price = coin.avg_buy_price * (1 - self.connector.svb_config['profit_rate'] / 100)
+        return coin
