@@ -109,8 +109,8 @@ class CoinTradingConnector(AbstractTradingConnector):
             self.set_min_max(stocks_list)
             self.logger.info("2. 전날 거래량을 다시 계산합니다.")
             self.update_last_infos(stocks_list)
-            self.logger.info("3. 시가와 목표 구매가를 다시 계산합니다.")
-            stocks_list = list(map(setup_target_buy_price, stocks_list))
+            # self.logger.info("3. 시가와 목표 구매가를 다시 계산합니다.")
+            # stocks_list = list(map(setup_target_buy_price, stocks_list))
             self.logger.info("4. 현재 보유한 종목을 시장가에 팝니다.")
             self.sell_all(stocks_list)
             self.logger.info("5. 모든 종목의 상태를 WAIT으로 합니다.")
@@ -216,6 +216,8 @@ class CoinTradingConnector(AbstractTradingConnector):
         for coin in coins:
             coin.current_volume = pyupbit.get_ohlcv("KRW-" + coin.name, interval='day', count=1).get("volume")[0]
             coin.current_price = current_price['KRW-' + coin.name]
+            coin.low_price = min(coin.current_price, coin.low_price if coin.low_price != 0 else coin.current_price)
+            coin.high_price = max(coin.current_price, coin.high_price if coin.high_price != 0 else coin.current_price)
 
     def update_last_infos(self, coins: list[Coin]):
         for coin in coins:
@@ -309,11 +311,7 @@ def setup_status_wait(stocks_list: list[Coin]):
         stock.status = Status.WAIT
 
 
-def setup_target_buy_price(coin: Coin):
-    coin.target_buy_price = coin.open_price + (coin.svb_info.max - coin.svb_info.min) / 2
-    if calculate_rate(coin.target_buy_price, coin.open_price) <= 1.5:
-        coin.target_buy_price = coin.open_price * 1.015
-    return coin
+
 
 
 if __name__ == "__main__":

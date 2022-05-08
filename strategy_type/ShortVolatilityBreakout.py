@@ -2,6 +2,7 @@ import time
 
 from object.Coin import Status, Coin
 from strategy_type.AbstractStrategy import AbstractStrategy
+from util.Calculator import calculate_rate
 from util.MethodLoggerDecorator import method_logger_decorator
 from datetime import datetime
 
@@ -19,6 +20,7 @@ class ShortVolatilityBreakout(AbstractStrategy):
             self.connector.save_pickles(stocks_list, "SVB")
             time.sleep(5)
             self.connector.update_current_infos(stocks_list)
+            stocks_list = list(map(self.setup_target_buy_price, stocks_list))
 
             for stock in stocks_list:
                 self.coin_logger.info(stock)
@@ -86,4 +88,12 @@ class ShortVolatilityBreakout(AbstractStrategy):
     def setup_target_sell_price(self, coin: Coin):
         coin.target_profit_cut_sell_price = coin.avg_buy_price * (1 + self.connector.svb_config['profit_rate'] / 100)
         coin.target_loss_cut_sell_price = coin.avg_buy_price * (1 - self.connector.svb_config['profit_rate'] / 100)
+        return coin
+
+    def setup_target_buy_price(self, coin: Coin):
+        if coin.low_price == 0:
+            coin.low_price = coin.current_price
+        coin.target_buy_price = coin.low_price * (1 + 0.03)
+        # if calculate_rate(coin.target_buy_price, coin.open_price) <= 1.5:
+        #     coin.target_buy_price = coin.open_price * 1.015
         return coin

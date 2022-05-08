@@ -49,6 +49,8 @@ class Coin:
         self.name: str = coin_name
         self.check_time: str = check_time
         self.status: IntEnum = Status.WAIT
+        self.low_price: float = 0  # 금일 저가
+        self.high_price: float = 0  # 금일 고가
         self.open_price: float = 0  # 금일 시가
         self.current_price: float = 0  # 현재 가격
         self.current_volume: float = 0  # 현재 거래량
@@ -69,7 +71,6 @@ class Coin:
         self.avg_sell_price: float = 0  # 매도한 코인 평균가격
         self.sold_amount: float = 0  # 매도한 가격 (양)
 
-        self.high_price: float = 0
         self.earnings_ratio: float = 0  # 현재 코인 수익률
         self.max_earnings_ratio: float = 0  # 현재 봉에서 최대 수익률
 
