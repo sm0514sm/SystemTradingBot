@@ -96,7 +96,6 @@ class CoinTradingConnector(AbstractTradingConnector):
             self.last_hb_time = now_timestamp
             self.discord_conn.post_heartbeat(self.discord_conn.heart_data(self.get_total_assets()))
 
-    @method_logger_decorator
     def daily_at_9(self, stocks_list):
         now_timestamp = datetime.now().timestamp()
         now_timestamp = now_timestamp - now_timestamp % (60 * 60 * 24)
