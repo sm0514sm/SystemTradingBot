@@ -50,7 +50,7 @@ class ShortVolatilityBreakout(AbstractStrategy):
             stock.status = Status.PASS
             return
         self.connector.buy_limit_order(stock,
-                                       stock.current_price,
+                                       stock.target_buy_price,
                                        self.connector.svb_config['buy_amount'] / stock.current_price)
 
     def do_check_buy_success(self, stock: Coin):
