@@ -308,9 +308,7 @@ class CoinTradingConnector(AbstractTradingConnector):
 def setup_status_wait(stocks_list: list[Coin]):
     for stock in stocks_list:
         stock.status = Status.WAIT
-
-
-
+        stock.low_price = 0
 
 
 if __name__ == "__main__":
